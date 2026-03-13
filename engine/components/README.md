@@ -91,6 +91,9 @@ astronverse-hello = {path = "./components/astronverse-hello", editable = true}
 
 Without that step, `uv run --project engine ...` will not see your new component.
 
+If the component also needs to ship in the final product, update [`manifest.toml`](./manifest.toml) as well.
+Components missing from the manifest are reported as ignored during builds and are excluded from packaged artifacts.
+
 ## 6. Test the Component
 
 Run:
@@ -106,7 +109,7 @@ The fastest path is:
 1. Copy `engine/components/astronverse-hello/`
 2. Rename the directory to `astronverse-your-component`
 3. Rename `astronverse.hello`, `Hello`, and `say_hello`
-4. Update `config.yaml` and the root `engine/pyproject.toml`
+4. Update `config.yaml`, the root `engine/pyproject.toml`, and [`manifest.toml`](./manifest.toml)
 5. Re-run the test and `meta.py`
 
 ### Does every new component need `meta.py`?

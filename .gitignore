@@ -61,6 +61,7 @@ tmp/
 
 # Claude Code (user-specific)
 .claude/
+docs/superpowers/
 
 # =============================================================================
 # Operating Systems

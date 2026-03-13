@@ -91,6 +91,9 @@ astronverse-hello = {path = "./components/astronverse-hello", editable = true}
 
 如果不做这一步，`uv run --project engine ...` 无法识别你的新组件。
 
+如果这个组件还需要进入最终打包产物，还要同步更新 [`manifest.toml`](./manifest.toml)。
+没有出现在 manifest 中的组件，构建脚本会明确提示为 ignored，并且不会参与产品打包。
+
 ## 6. 测试组件
 
 执行：
@@ -106,7 +109,7 @@ uv run --project engine python -m unittest engine/components/astronverse-hello/t
 1. 复制 `engine/components/astronverse-hello/`
 2. 将目录名改成 `astronverse-你的组件名`
 3. 把 `astronverse.hello`、`Hello`、`say_hello` 改成你的实际命名
-4. 更新 `config.yaml` 和根 `engine/pyproject.toml`
+4. 更新 `config.yaml`、根 `engine/pyproject.toml`，以及 [`manifest.toml`](./manifest.toml)
 5. 重新运行测试与 `meta.py`
 
 ### 新组件一定要有 `meta.py` 吗？
