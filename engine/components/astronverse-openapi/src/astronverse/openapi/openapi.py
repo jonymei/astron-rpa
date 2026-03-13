@@ -1,3 +1,8 @@
+import base64
+import json
+import os
+
+import requests
 from astronverse.actionlib import AtomicFormType, AtomicFormTypeMeta, DynamicsItem
 from astronverse.actionlib.atomic import atomicMg
 from astronverse.actionlib.types import PATH
@@ -7,6 +12,33 @@ from astronverse.openapi.error import *
 
 
 class OpenApi:
+    @staticmethod
+    def _speech_gateway_url(path: str) -> str:
+        port = atomicMg.cfg().get("GATEWAY_PORT") if atomicMg.cfg().get("GATEWAY_PORT") else "13159"
+        return f"http://127.0.0.1:{port}/api/rpa-ai-service{path}"
+
+    @staticmethod
+    def _post_speech(path: str, payload: dict) -> dict:
+        response = requests.request(
+            "POST",
+            OpenApi._speech_gateway_url(path),
+            data=json.dumps(payload),
+            headers={"content-type": "application/json"},
+        )
+        if response.status_code != 200:
+            raise BaseException(AI_SERVER_ERROR, f"ai服务器无响应或错误 {response.text}")
+        return response.json()
+
+    @staticmethod
+    def _read_audio_file(src_file: str) -> tuple[str, str]:
+        files = utils.generate_src_files(src_file, file_type="file")
+        if len(files) == 0:
+            raise BaseException(IMAGE_EMPTY, "音频路径不存在或格式错误")
+        file_path = files[0]
+        with open(file_path, "rb") as file:
+            audio_base64 = base64.b64encode(file.read()).decode("utf-8")
+        return file_path, audio_base64
+
     @staticmethod
     @atomicMg.atomic(
         "OpenApi",
@@ -528,3 +560,213 @@ class OpenApi:
         if is_save:
             utils.write_to_excel(dst_file, dst_file_name, header_dict, res)
         return res
+
+    @staticmethod
+    @atomicMg.atomic(
+        "OpenApi",
+        inputList=[
+            atomicMg.param(
+                "src_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "file"},
+                ),
+            ),
+            atomicMg.param(
+                "dst_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "folder"},
+                ),
+                dynamics=[DynamicsItem(key="$this.dst_file.show", expression="return $this.is_save.value == true")],
+            ),
+        ],
+        outputList=[
+            atomicMg.param("text", types="Str"),
+            atomicMg.param("result", types="Dict"),
+            atomicMg.param("saved_file", types="PATH"),
+        ],
+    )
+    def speech_asr_zh(
+        src_file: PATH = "",
+        is_save: bool = False,
+        dst_file: PATH = "",
+        dst_file_name: str = "speech_asr_zh",
+        save_format: str = "txt",
+    ) -> dict:
+        file_path, audio_base64 = OpenApi._read_audio_file(src_file)
+        response = OpenApi._post_speech(
+            "/speech/asr/chinese",
+            {
+                "audio_base64": audio_base64,
+                "filename": os.path.basename(file_path),
+                "language": "cn",
+            },
+        )
+        result = {"text": response["text"], "result": response["result"], "saved_file": ""}
+        if is_save:
+            if save_format == "json":
+                result["saved_file"] = utils.write_text_file(
+                    dst_file, dst_file_name, json.dumps(response["result"], ensure_ascii=False, indent=2), ".json"
+                )
+            else:
+                result["saved_file"] = utils.write_text_file(dst_file, dst_file_name, response["text"], ".txt")
+        return result
+
+    @staticmethod
+    @atomicMg.atomic(
+        "OpenApi",
+        inputList=[
+            atomicMg.param(
+                "src_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "file"},
+                ),
+            ),
+            atomicMg.param("language"),
+            atomicMg.param(
+                "dst_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "folder"},
+                ),
+                dynamics=[DynamicsItem(key="$this.dst_file.show", expression="return $this.is_save.value == true")],
+            ),
+        ],
+        outputList=[
+            atomicMg.param("text", types="Str"),
+            atomicMg.param("result", types="Dict"),
+            atomicMg.param("saved_file", types="PATH"),
+        ],
+    )
+    def speech_asr_multilingual(
+        src_file: PATH = "",
+        language: str = "en",
+        is_save: bool = False,
+        dst_file: PATH = "",
+        dst_file_name: str = "speech_asr_multilingual",
+        save_format: str = "txt",
+    ) -> dict:
+        file_path, audio_base64 = OpenApi._read_audio_file(src_file)
+        response = OpenApi._post_speech(
+            "/speech/asr/multilingual",
+            {
+                "audio_base64": audio_base64,
+                "filename": os.path.basename(file_path),
+                "language": language,
+            },
+        )
+        result = {"text": response["text"], "result": response["result"], "saved_file": ""}
+        if is_save:
+            if save_format == "json":
+                result["saved_file"] = utils.write_text_file(
+                    dst_file, dst_file_name, json.dumps(response["result"], ensure_ascii=False, indent=2), ".json"
+                )
+            else:
+                result["saved_file"] = utils.write_text_file(dst_file, dst_file_name, response["text"], ".txt")
+        return result
+
+    @staticmethod
+    @atomicMg.atomic(
+        "OpenApi",
+        inputList=[
+            atomicMg.param(
+                "src_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "file"},
+                ),
+            ),
+            atomicMg.param("language"),
+            atomicMg.param(
+                "dst_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "folder"},
+                ),
+                dynamics=[DynamicsItem(key="$this.dst_file.show", expression="return $this.is_save.value == true")],
+            ),
+        ],
+        outputList=[
+            atomicMg.param("text", types="Str"),
+            atomicMg.param("result", types="Dict"),
+            atomicMg.param("saved_file", types="PATH"),
+        ],
+    )
+    def speech_transcribe_audio(
+        src_file: PATH = "",
+        language: str = "cn",
+        is_save: bool = False,
+        dst_file: PATH = "",
+        dst_file_name: str = "speech_transcribe_audio",
+        save_format: str = "txt",
+    ) -> dict:
+        file_path, audio_base64 = OpenApi._read_audio_file(src_file)
+        response = OpenApi._post_speech(
+            "/speech/transcription",
+            {
+                "audio_base64": audio_base64,
+                "filename": os.path.basename(file_path),
+                "language": language,
+                "result_type": "transfer",
+            },
+        )
+        result = {"text": response["text"], "result": response["result"], "saved_file": ""}
+        if is_save:
+            if save_format == "json":
+                result["saved_file"] = utils.write_text_file(
+                    dst_file, dst_file_name, json.dumps(response["result"], ensure_ascii=False, indent=2), ".json"
+                )
+            else:
+                result["saved_file"] = utils.write_text_file(dst_file, dst_file_name, response["text"], ".txt")
+        return result
+
+    @staticmethod
+    @atomicMg.atomic(
+        "OpenApi",
+        inputList=[
+            atomicMg.param("text"),
+            atomicMg.param("voice"),
+            atomicMg.param(
+                "dst_file",
+                formType=AtomicFormTypeMeta(
+                    type=AtomicFormType.INPUT_VARIABLE_PYTHON_FILE.value,
+                    params={"file_type": "folder"},
+                ),
+            ),
+        ],
+        outputList=[
+            atomicMg.param("audio_file", types="PATH"),
+            atomicMg.param("result", types="Dict"),
+        ],
+    )
+    def speech_tts_ultra_human(
+        text: str = "",
+        voice: str = "xiaoyan",
+        speed: int = 50,
+        volume: int = 50,
+        pitch: int = 50,
+        dst_file: PATH = "",
+        dst_file_name: str = "speech_tts_ultra_human",
+        audio_format: str = "mp3",
+    ) -> dict:
+        response = OpenApi._post_speech(
+            "/speech/tts",
+            {
+                "text": text,
+                "voice": voice,
+                "speed": speed,
+                "volume": volume,
+                "pitch": pitch,
+                "audio_format": audio_format,
+                "sample_rate": 16000,
+            },
+        )
+        audio_file = utils.write_binary_file(
+            dst_file,
+            dst_file_name,
+            base64.b64decode(response["audio_base64"]),
+            f".{audio_format}",
+        )
+        return {"audio_file": audio_file, "result": response["result"]}

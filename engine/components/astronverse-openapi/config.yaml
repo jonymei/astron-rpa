@@ -167,6 +167,142 @@ atomic:
       - key: common_ocr
         title: 通用文字识别结果对象
         tip: 输出通用文字识别结果对象
+  OpenApi.speech_asr_zh:
+    title: 中文语音识别大模型
+    comment: 上传单个音频文件，识别中文语音并返回文本结果
+    icon: general-text-recognition
+    helpManual: ''
+    inputList:
+      - key: src_file
+        title: 音频文件
+        tip: 选择单个音频文件
+      - key: is_save
+        title: 保存结果
+        tip: 是否将识别结果保存到本地文件
+      - key: dst_file
+        title: 结果输出路径
+        tip: 选择结果输出文件夹
+      - key: dst_file_name
+        title: 输出文件名
+        tip: 选择输出文件名
+      - key: save_format
+        title: 保存格式
+        tip: 支持 txt 或 json
+    outputList:
+      - key: text
+        title: 识别文本
+        tip: 输出识别后的文本
+      - key: result
+        title: 识别结果对象
+        tip: 输出完整识别结果对象
+      - key: saved_file
+        title: 保存文件路径
+        tip: 输出保存后的文件路径
+  OpenApi.speech_asr_multilingual:
+    title: 多语种语音识别大模型
+    comment: 上传单个音频文件，按指定语种识别并返回文本结果
+    icon: general-text-recognition
+    helpManual: ''
+    inputList:
+      - key: src_file
+        title: 音频文件
+        tip: 选择单个音频文件
+      - key: language
+        title: 语种
+        tip: 输入讯飞支持的语种代码，例如 en、ja、ko
+      - key: is_save
+        title: 保存结果
+        tip: 是否将识别结果保存到本地文件
+      - key: dst_file
+        title: 结果输出路径
+        tip: 选择结果输出文件夹
+      - key: dst_file_name
+        title: 输出文件名
+        tip: 选择输出文件名
+      - key: save_format
+        title: 保存格式
+        tip: 支持 txt 或 json
+    outputList:
+      - key: text
+        title: 识别文本
+        tip: 输出识别后的文本
+      - key: result
+        title: 识别结果对象
+        tip: 输出完整识别结果对象
+      - key: saved_file
+        title: 保存文件路径
+        tip: 输出保存后的文件路径
+  OpenApi.speech_transcribe_audio:
+    title: 录音文件转写大模型
+    comment: 上传单个录音文件，转写并返回文本结果
+    icon: general-text-recognition
+    helpManual: ''
+    inputList:
+      - key: src_file
+        title: 音频文件
+        tip: 选择单个音频文件
+      - key: language
+        title: 语种
+        tip: 输入讯飞支持的语种代码
+      - key: is_save
+        title: 保存结果
+        tip: 是否将转写结果保存到本地文件
+      - key: dst_file
+        title: 结果输出路径
+        tip: 选择结果输出文件夹
+      - key: dst_file_name
+        title: 输出文件名
+        tip: 选择输出文件名
+      - key: save_format
+        title: 保存格式
+        tip: 支持 txt 或 json
+    outputList:
+      - key: text
+        title: 转写文本
+        tip: 输出转写后的文本
+      - key: result
+        title: 转写结果对象
+        tip: 输出完整转写结果对象
+      - key: saved_file
+        title: 保存文件路径
+        tip: 输出保存后的文件路径
+  OpenApi.speech_tts_ultra_human:
+    title: 超拟人语音合成
+    comment: 输入文本并生成语音文件
+    icon: general-text-recognition
+    helpManual: ''
+    inputList:
+      - key: text
+        title: 合成文本
+        tip: 输入需要合成的文本内容
+      - key: voice
+        title: 发音人
+        tip: 输入讯飞发音人标识，默认 xiaoyan
+      - key: speed
+        title: 语速
+        tip: 0-100，默认 50
+      - key: volume
+        title: 音量
+        tip: 0-100，默认 50
+      - key: pitch
+        title: 音高
+        tip: 0-100，默认 50
+      - key: dst_file
+        title: 音频输出路径
+        tip: 选择音频输出文件夹
+      - key: dst_file_name
+        title: 音频文件名
+        tip: 选择输出音频文件名
+      - key: audio_format
+        title: 音频格式
+        tip: 默认 mp3
+    outputList:
+      - key: audio_file
+        title: 音频文件路径
+        tip: 输出生成的音频文件路径
+      - key: result
+        title: 合成结果对象
+        tip: 输出完整合成结果对象
 options:
   Bool:
     - value: true

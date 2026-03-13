@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from openpyxl import Workbook
 
@@ -81,3 +82,25 @@ def generate_src_files(src_file, file_type="image"):
             else:
                 files.append(src_file)
     return files
+
+
+def ensure_parent_dir(dst_file: str):
+    Path(dst_file).mkdir(parents=True, exist_ok=True)
+
+
+def write_text_file(dst_dir: str, dst_name: str, content: str, suffix: str = ".txt") -> str:
+    ensure_parent_dir(dst_dir)
+    if not os.path.splitext(dst_name)[1]:
+        dst_name = f"{dst_name}{suffix}"
+    full_path = os.path.join(dst_dir, dst_name)
+    Path(full_path).write_text(content, encoding="utf-8")
+    return full_path
+
+
+def write_binary_file(dst_dir: str, dst_name: str, content: bytes, suffix: str) -> str:
+    ensure_parent_dir(dst_dir)
+    if not os.path.splitext(dst_name)[1]:
+        dst_name = f"{dst_name}{suffix}"
+    full_path = os.path.join(dst_dir, dst_name)
+    Path(full_path).write_bytes(content)
+    return full_path
