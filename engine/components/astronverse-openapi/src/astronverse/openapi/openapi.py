@@ -743,7 +743,7 @@ class OpenApi:
     )
     def speech_tts_ultra_human(
         text: str = "",
-        voice: str = "xiaoyan",
+        voice: str = "x5_lingyuyan_flow",
         speed: int = 50,
         volume: int = 50,
         pitch: int = 50,

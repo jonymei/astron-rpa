@@ -277,7 +277,7 @@ atomic:
         tip: 输入需要合成的文本内容
       - key: voice
         title: 发音人
-        tip: 输入讯飞发音人标识，默认 xiaoyan
+        tip: 选择超拟人发音人
       - key: speed
         title: 语速
         tip: 0-100，默认 50
@@ -309,3 +309,24 @@ options:
       label: 是
     - value: false
       label: 否
+  voice:
+    - value: x5_lingyuyan_flow
+      label: 聆玉言
+    - value: x5_lingxiaoxuan_flow
+      label: 聆小璇
+    - value: x5_lingfeiyi_flow
+      label: 聆飞逸
+    - value: x5_lingxiaoyue_flow
+      label: 聆小玥
+    - value: x5_lingyuzhao_flow
+      label: 聆玉昭
+  audio_format:
+    - value: mp3
+      label: MP3
+    - value: pcm
+      label: PCM
+  save_format:
+    - value: txt
+      label: TXT
+    - value: json
+      label: JSON
