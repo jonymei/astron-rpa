@@ -18,7 +18,7 @@ class SpeechTranscriptionRequestBody(BaseModel):
 
 class SpeechTTSRequestBody(BaseModel):
     text: str = Field(min_length=1)
-    voice: str = "xiaoyan"
+    voice: str = "x5_lingyuyan_flow"
     speed: int = 50
     volume: int = 50
     pitch: int = 50

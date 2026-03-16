@@ -241,21 +241,35 @@ def assemble_ws_auth_url(url: str, api_key: str, api_secret: str) -> str:
 
 async def synthesize_tts_audio(text: str, voice: str, speed: int, volume: int, pitch: int, audio_format: str, sample_rate: int) -> tuple[bytes, dict]:
     settings = get_settings()
-    url = assemble_ws_auth_url("wss://tts-api.xfyun.cn/v2/tts", settings.XFYUN_API_KEY, settings.XFYUN_API_SECRET)
+    url = assemble_ws_auth_url("wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/mcd9m97e6", settings.XFYUN_API_KEY, settings.XFYUN_API_SECRET)
     request_body = {
-        "common": {"app_id": settings.XFYUN_APP_ID},
-        "business": {
-            "aue": "lame" if audio_format == "mp3" else "raw",
-            "auf": f"audio/L16;rate={sample_rate}",
-            "vcn": voice,
-            "speed": speed,
-            "volume": volume,
-            "pitch": pitch,
-            "tte": "utf8",
-        },
-        "data": {
+        "header": {
+            "app_id": settings.XFYUN_APP_ID,
             "status": 2,
-            "text": base64.b64encode(text.encode("utf-8")).decode("utf-8"),
+        },
+        "parameter": {
+            "tts": {
+                "vcn": voice,
+                "speed": speed,
+                "volume": volume,
+                "pitch": pitch,
+                "audio": {
+                    "encoding": "lame" if audio_format == "mp3" else "raw",
+                    "sample_rate": sample_rate,
+                    "channels": 1,
+                    "bit_depth": 16,
+                },
+            }
+        },
+        "payload": {
+            "text": {
+                "encoding": "utf8",
+                "compress": "raw",
+                "format": "plain",
+                "status": 2,
+                "seq": 0,
+                "text": base64.b64encode(text.encode("utf-8")).decode("utf-8"),
+            }
         },
     }
     audio_chunks: list[bytes] = []
@@ -265,11 +279,10 @@ async def synthesize_tts_audio(text: str, voice: str, speed: int, volume: int, p
         async for message in websocket:
             payload = json.loads(message)
             if payload.get("code", 0) != 0:
-                raise SpeechError(payload.get("message", "XFYun TTS failed."))
-            data = payload.get("data") or {}
-            audio = data.get("audio")
-            if audio:
-                audio_chunks.append(base64.b64decode(audio))
-            if data.get("status") == 2:
+                raise SpeechError(payload.get("message", "XFYun Super TTS failed."))
+            audio_data = payload.get("payload", {}).get("audio", {}).get("audio")
+            if audio_data:
+                audio_chunks.append(base64.b64decode(audio_data))
+            if payload.get("payload", {}).get("audio", {}).get("status") == 2:
                 break
     return b"".join(audio_chunks), result_meta
