@@ -2,10 +2,10 @@ import base64
 import json
 import os
 
+import requests
 from astronverse.actionlib import AtomicFormType, AtomicFormTypeMeta, DynamicsItem
 from astronverse.actionlib.atomic import atomicMg
 from astronverse.actionlib.types import PATH
-from astronverse.openapi.client import GatewayClient
 from astronverse.openapi import utils
 from astronverse.openapi.core_iflytek import OpenapiIflytek
 from astronverse.openapi.error import *
@@ -13,8 +13,21 @@ from astronverse.openapi.error import *
 
 class OpenApi:
     @staticmethod
+    def _speech_gateway_url(path: str) -> str:
+        port = atomicMg.cfg().get("GATEWAY_PORT") if atomicMg.cfg().get("GATEWAY_PORT") else "13159"
+        return f"http://127.0.0.1:{port}/api/rpa-ai-service{path}"
+
+    @staticmethod
     def _post_speech(path: str, payload: dict) -> dict:
-        return GatewayClient.post(path, payload)
+        response = requests.request(
+            "POST",
+            OpenApi._speech_gateway_url(path),
+            data=json.dumps(payload),
+            headers={"content-type": "application/json"},
+        )
+        if response.status_code != 200:
+            raise BaseException(AI_SERVER_ERROR, f"ai服务器无响应或错误 {response.text}")
+        return response.json()
 
     @staticmethod
     def _read_audio_file(src_file: str) -> tuple[str, str]:
