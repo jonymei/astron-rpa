@@ -10,6 +10,7 @@ from wsgiref.handlers import format_date_time
 
 import requests
 from astronverse.actionlib.atomic import atomicMg
+from astronverse.openapi.client import GatewayClient
 from astronverse.openapi.error import *
 
 # 配置文件中设置信息读取
@@ -155,18 +156,8 @@ class OpenapiIflytek:
             suffix = os.path.splitext(image)[1].lstrip(".").lower()
             # 请求数据准备
             body = {"encoding": suffix, "image": str(image_info, "UTF-8"), "status": 3}
-            url = "http://127.0.0.1:{}/api/rpa-ai-service/ocr/general".format(
-                atomicMg.cfg().get("GATEWAY_PORT") if atomicMg.cfg().get("GATEWAY_PORT") else "13159"
-            )
-            headers = {"content-type": "application/json"}
-            # 发起请求
-            ret = requests.request("POST", url, data=json.dumps(body), headers=headers)
-
-            # 请求结果处理
-            if ret.status_code != 200:
-                raise BaseException(AI_SERVER_ERROR, "ai服务器无响应或错误 {}".format(ret))
-
-            ret_dict = json.loads(base64.b64decode(ret.json()["payload"]["result"]["text"]).decode())
+            ret = GatewayClient.post("/ocr/general", body)
+            ret_dict = json.loads(base64.b64decode(ret["payload"]["result"]["text"]).decode())
             content = OpenapiIflytek.__analyse_ocr_result__(ret_dict)
             ocr_result = {"Context": content}
             json_result = {}
