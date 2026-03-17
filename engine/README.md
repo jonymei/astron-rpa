@@ -11,7 +11,6 @@ If you want to build a new component instead of only running `meta_json.py`, sta
 - Merge all component `meta.json` files into a single master configuration.
 - Pull the meta configuration from the remote server and merge it with the local configuration to avoid losing existing content on the server.
 - Support uploading the merged configuration to the server.
-- Product packaging includes only the components listed in `engine/components/manifest.toml`.
 
 ## Environment Setup
 

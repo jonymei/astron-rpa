@@ -84,7 +84,6 @@ set BUILD_DIR=build
 set PYTHON_CORE_DIR=%BUILD_DIR%\python_core
 set DIST_DIR=%BUILD_DIR%\dist
 set ARCHIVE_DIST_DIR=resources
-set COMPONENT_MANIFEST=%ENGINE_DIR%\components\manifest.toml
 
 REM ============================================
 REM 3. Environment Check
@@ -201,9 +200,6 @@ copy %ENGINE_DIR%\pyproject.toml %ENGINE_DIR%\pyproject.toml.backup >nul
 REM Dynamically build workspace members list
 echo Building workspace members list...
 set "WORKSPACE_MEMBERS="
-set "DISCOVERED_COMPONENTS="
-set "INCLUDED_COMPONENTS="
-set "IGNORED_COMPONENTS="
 
 REM Check shared/* directories
 for /d %%d in ("%ENGINE_DIR%\shared\*") do (
@@ -221,39 +217,14 @@ for /d %%d in ("%ENGINE_DIR%\servers\*") do (
     )
 )
 
-REM Resolve component build list from manifest
-echo Reading component manifest: %COMPONENT_MANIFEST%
-for /f "usebackq tokens=1,* delims==" %%A in (`"%PYTHON_EXE%" "%ENGINE_DIR%\scripts\component_manifest.py" --components-dir "%ENGINE_DIR%\components" --manifest "%COMPONENT_MANIFEST%" --format batch`) do (
-    if /i "%%A"=="ERROR" (
-        echo Manifest error: %%B
-        move %ENGINE_DIR%\pyproject.toml.backup %ENGINE_DIR%\pyproject.toml >nul 2>nul
-        exit /b 1
+REM Check components/* directories
+for /d %%d in ("%ENGINE_DIR%\components\*") do (
+    if exist "%%d\pyproject.toml" (
+        set "MEMBER_PATH=%%~nxd"
+        if /i not "!MEMBER_PATH!"=="astronverse-database" (
+            set "WORKSPACE_MEMBERS=!WORKSPACE_MEMBERS! "components/!MEMBER_PATH!","
+        )
     )
-    if /i "%%A"=="DISCOVERED_COMPONENTS" set "DISCOVERED_COMPONENTS=%%B"
-    if /i "%%A"=="INCLUDED_COMPONENTS" set "INCLUDED_COMPONENTS=%%B"
-    if /i "%%A"=="IGNORED_COMPONENTS" set "IGNORED_COMPONENTS=%%B"
-    if /i "%%A"=="WORKSPACE_COMPONENT_MEMBERS" set "WORKSPACE_COMPONENT_MEMBERS=%%B"
-)
-
-if not defined WORKSPACE_COMPONENT_MEMBERS (
-    echo Failed to resolve component build list from manifest
-    move %ENGINE_DIR%\pyproject.toml.backup %ENGINE_DIR%\pyproject.toml >nul 2>nul
-    exit /b 1
-)
-
-for %%M in (!WORKSPACE_COMPONENT_MEMBERS:^|= !) do (
-    set "WORKSPACE_MEMBERS=!WORKSPACE_MEMBERS! "%%~M","
-)
-
-echo Discovered components:
-for %%C in (!DISCOVERED_COMPONENTS:^|= !) do echo   - %%~C
-echo Included components from manifest:
-for %%C in (!INCLUDED_COMPONENTS:^|= !) do echo   - %%~C
-if defined IGNORED_COMPONENTS (
-    echo WARNING: Ignored components not listed in manifest:
-    for %%C in (!IGNORED_COMPONENTS:^|= !) do echo   - %%~C
-) else (
-    echo Ignored components: none
 )
 
 REM Remove trailing comma and build final members list
