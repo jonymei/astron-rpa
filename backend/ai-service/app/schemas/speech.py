@@ -4,12 +4,16 @@ from pydantic import BaseModel, Field
 
 
 class SpeechASRRequestBody(BaseModel):
+    """短音频识别请求，适用于 60 秒以内的日常说话音频。"""
+
     audio_base64: str
     filename: str
     language: str = "cn"
 
 
 class SpeechTranscriptionRequestBody(BaseModel):
+    """长录音文件转写请求，适用于会议录音等长时间音频。"""
+
     audio_base64: str
     filename: str
     language: str = "cn"
