@@ -20,11 +20,14 @@ async def test_document_ocr():
     """Test document OCR with a sample image."""
     print("\n=== Testing Document OCR ===")
 
-    # Create a simple test image (1x1 white pixel PNG)
-    test_image_bytes = base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-    )
+    # Load test image from assets
+    test_image_path = os.path.join(os.path.dirname(__file__), "../assets/test.jpg")
+    print(f"Loading test image from: {test_image_path}")
+
+    with open(test_image_path, "rb") as f:
+        test_image_bytes = f.read()
     test_image_base64 = base64.b64encode(test_image_bytes).decode("utf-8")
+    print(f"Image size: {len(test_image_bytes)} bytes, base64 size: {len(test_image_base64)} chars")
 
     try:
         client = DocumentOCRClient()
@@ -33,7 +36,7 @@ async def test_document_ocr():
         print(f"Base URL: {client.config.base_url}")
 
         print("\nSending request...")
-        result = await client.recognize(test_image_base64, encoding="png")
+        result = await client.recognize(test_image_base64, encoding="jpg")
 
         print(f"\nResponse received:")
         print(f"  Code: {result.header.code}")
@@ -59,11 +62,13 @@ async def test_document_ocr():
 
 
 async def test_pdf_ocr():
-    """Test PDF OCR with a sample PDF URL."""
+    """Test PDF OCR with a sample PDF file."""
     print("\n=== Testing PDF OCR ===")
 
-    # Note: This requires a valid PDF URL or file
-    # For now, we'll just test the client creation
+    # Load test PDF from assets
+    test_pdf_path = os.path.join(os.path.dirname(__file__), "../assets/test.pdf")
+    print(f"Loading test PDF from: {test_pdf_path}")
+
     try:
         client = PDFOCRClient()
         print(f"Client created with config: {client.config.service_name}")
@@ -72,12 +77,41 @@ async def test_pdf_ocr():
         print(f"Poll interval: {client.poll_interval}s")
         print(f"Max poll time: {client.max_poll_time}s")
 
-        print("\n⚠️  PDF OCR test skipped (requires valid PDF file or URL)")
-        print("To test PDF OCR, provide a PDF file or URL in the code")
+        print("\nUploading PDF and creating task...")
+        # Create a fake UploadFile object
+        from io import BytesIO
+
+        with open(test_pdf_path, "rb") as f:
+            pdf_content = f.read()
+
+        print(f"PDF size: {len(pdf_content)} bytes")
+
+        # Create a simple file-like object
+        class FakeUploadFile:
+            def __init__(self, filename, content, content_type):
+                self.filename = filename
+                self.content = content
+                self.content_type = content_type
+                self._file = BytesIO(content)
+
+            async def read(self):
+                return self.content
+
+        fake_file = FakeUploadFile("test.pdf", pdf_content, "application/pdf")
+
+        result = await client.recognize(file=fake_file, export_format="json")
+
+        print(f"\nResponse received:")
+        print(f"  Task No: {result.task_no}")
+        print(f"  Status: {result.status}")
+        print(f"  Page Count: {result.page_count}")
+        print(f"  Result URL: {result.result_url}")
+
+        print("\n✅ PDF OCR test passed!")
         return True
 
     except Exception as e:
-        print(f"\n❌ PDF OCR client creation failed: {e}")
+        print(f"\n❌ PDF OCR test failed: {e}")
         import traceback
 
         traceback.print_exc()

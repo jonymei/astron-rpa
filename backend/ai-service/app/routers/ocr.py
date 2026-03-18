@@ -169,7 +169,7 @@ async def pdf_ocr(
         result = await client.recognize(file, pdf_url, export_format)
 
         # 按页数扣费：10 积分/页
-        if result.status == "completed":
+        if result.status == "FINISH":
             points_to_deduct = result.page_count * 10
             await points_context.deduct_custom_points(points_to_deduct)
             logger.info(f"PDF OCR completed, {result.page_count} pages, deducted {points_to_deduct} points")

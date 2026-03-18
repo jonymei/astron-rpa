@@ -50,5 +50,11 @@ class XFYunOCRClient:
 
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
             response = await client.request(method, auth_url, headers=final_headers, **kwargs)
+
+            # 如果是错误响应，记录详细信息
+            if response.status_code >= 400:
+                logger.error(f"Request failed with status {response.status_code}")
+                logger.error(f"Response body: {response.text}")
+
             response.raise_for_status()
             return response

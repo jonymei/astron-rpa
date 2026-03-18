@@ -44,7 +44,8 @@ class PDFOCRClient(XFYunOCRClient):
 
         result = response.json()
 
-        if result.get("flag") != "success":
+        # 检查响应状态 (flag 是布尔值)
+        if not result.get("flag"):
             error_msg = result.get("desc", "Unknown error")
             raise OCRError(f"Failed to create PDF OCR task: {error_msg}")
 
@@ -58,7 +59,7 @@ class PDFOCRClient(XFYunOCRClient):
         response = await self._make_request("GET", url, params=params)
         result = response.json()
 
-        if result.get("flag") != "success":
+        if not result.get("flag"):
             error_msg = result.get("desc", "Unknown error")
             raise OCRError(f"Failed to query task status: {error_msg}")
 
@@ -78,9 +79,10 @@ class PDFOCRClient(XFYunOCRClient):
 
             logger.info(f"Task {task_no} status: {status}")
 
-            if status == "completed":
+            # 状态：CREATE, DOING, FINISH, FAIL
+            if status == "FINISH":
                 return task_data
-            elif status == "failed":
+            elif status == "FAIL":
                 raise OCRError(f"Task {task_no} failed")
 
             # 等待后继续轮询
@@ -120,8 +122,8 @@ class PDFOCRClient(XFYunOCRClient):
             response = PDFOCRResponse(
                 task_no=task_no,
                 status=completed_data.get("status", "unknown"),
-                page_count=completed_data.get("pageCount", 0),
-                result_url=completed_data.get("downloadUrl"),
+                page_count=len(completed_data.get("pageList", [])) if completed_data.get("pageList") else 0,
+                result_url=completed_data.get("downUrl"),
             )
 
             logger.info(f"PDF OCR task {task_no} completed with {response.page_count} pages")

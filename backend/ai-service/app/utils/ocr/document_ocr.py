@@ -21,20 +21,34 @@ class DocumentOCRClient(XFYunOCRClient):
         self, image_base64: str, encoding: str = "jpg", output_level: int = 1, output_format: str = "markdown"
     ) -> dict[str, Any]:
         """构建请求 payload."""
+        # result_format 必须是组合值，如 "json", "json,markdown", "json,sed" 等
+        # 默认使用 "json,markdown"
+        if output_format == "markdown":
+            result_format = "json,markdown"
+        elif output_format == "json":
+            result_format = "json"
+        else:
+            result_format = output_format
+
         return {
-            "header": {"app_id": self.auth_strategy.app_id, "status": 3},
+            "header": {
+                "app_id": self.auth_strategy.app_id,
+                "status": 0,  # 0: 开始, 1: 继续, 2: 结束
+            },
             "parameter": {
                 "ocr": {
-                    "output_level": output_level,
-                    "output_format": output_format,
-                    "result": {"encoding": "utf8", "compress": "raw", "format": "json"},
+                    "result_option": "normal",
+                    "result_format": result_format,
+                    "output_type": "one_shot",
+                    "result": {"encoding": "utf8", "compress": "raw", "format": "plain"},
                 }
             },
             "payload": {
                 "image": {
                     "encoding": encoding,
                     "image": image_base64,
-                    "status": 3,
+                    "status": 0,  # 0: 开始, 1: 继续, 2: 结束
+                    "seq": 0,
                 }
             },
         }

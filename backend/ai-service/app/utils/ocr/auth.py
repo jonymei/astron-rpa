@@ -73,6 +73,9 @@ class HmacSHA256Auth(AuthStrategy):
 
     def build_auth_headers(self) -> dict:
         """构建认证请求头."""
+        # 从 base_url 中提取 host
+        # 例如: https://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75ocrbm
+        # 提取: cbm01.cn-huabei-1.xf-yun.com
         return {
             "content-type": "application/json",
             "app_id": self.app_id,
@@ -88,14 +91,19 @@ class MD5HmacSHA1Auth(AuthStrategy):
 
     def build_auth_headers(self) -> dict:
         """构建 MD5 + HmacSHA1 认证请求头."""
-        # 生成时间戳（毫秒）
-        timestamp = str(int(datetime.now().timestamp() * 1000))
+        # 生成时间戳（秒，不是毫秒）
+        import time
+
+        timestamp = str(int(time.time()))
 
         # 第一步：MD5(appId + timestamp)
         md5_input = self.app_id + timestamp
         md5_hash = hashlib.md5(md5_input.encode("utf-8")).hexdigest()
 
-        # 第二步：HmacSHA1(md5_hash, api_secret)
-        signature = hmac.new(self.api_secret.encode("utf-8"), md5_hash.encode("utf-8"), digestmod=hashlib.sha1).hexdigest()
+        # 第二步：HmacSHA1(md5_hash, api_secret) 并 Base64 编码
+        signature_bytes = hmac.new(
+            self.api_secret.encode("utf-8"), md5_hash.encode("utf-8"), digestmod=hashlib.sha1
+        ).digest()
+        signature = base64.b64encode(signature_bytes).decode("utf-8")
 
         return {"appId": self.app_id, "timestamp": timestamp, "signature": signature}
