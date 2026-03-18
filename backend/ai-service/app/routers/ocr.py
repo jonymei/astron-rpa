@@ -37,6 +37,14 @@ router = APIRouter(
 )
 
 
+async def _raise_ocr_http_error(prefix: str, error: OCRError, points_context: PointsContext | None = None) -> None:
+    if points_context and error.should_deduct_points:
+        await points_context.deduct_points()
+        logger.info("%s failed after upstream processing, points deducted", prefix)
+
+    raise HTTPException(status_code=error.status_code, detail=f"{prefix} failed: {error.message}")
+
+
 @router.post("/general", response_model=OCRGeneralResponseBody)
 async def general_ocr(
     params: OCRGeneralRequestBody,
@@ -83,7 +91,7 @@ async def general_ocr(
     except OCRError as e:
         # 业务逻辑错误 - 400 Bad Request
         logger.error(f"OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"OCR processing failed: {e.message}")
+        await _raise_ocr_http_error("OCR processing", e, points_context)
 
     except httpx.HTTPError as e:
         # 网络错误 - 503 Service Unavailable
@@ -135,7 +143,7 @@ async def document_ocr(
 
     except OCRError as e:
         logger.error(f"Document OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"Document OCR failed: {e.message}")
+        await _raise_ocr_http_error("Document OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"Document OCR service network error: {e}")
@@ -191,7 +199,7 @@ async def pdf_ocr(
 
     except OCRError as e:
         logger.error(f"PDF OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"PDF OCR failed: {e.message}")
+        await _raise_ocr_http_error("PDF OCR", e)
 
     except httpx.HTTPError as e:
         logger.error(f"PDF OCR service network error: {e}")
@@ -240,7 +248,7 @@ async def ticket_ocr(
 
     except OCRError as e:
         logger.error(f"Ticket OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"Ticket OCR failed: {e.message}")
+        await _raise_ocr_http_error("Ticket OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"Ticket OCR service network error: {e}")
@@ -287,7 +295,7 @@ async def business_card_ocr(
 
     except OCRError as e:
         logger.error(f"Business card OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"Business card OCR failed: {e.message}")
+        await _raise_ocr_http_error("Business card OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"Business card OCR service network error: {e}")
@@ -334,7 +342,7 @@ async def id_card_ocr(
 
     except OCRError as e:
         logger.error(f"ID card OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"ID card OCR failed: {e.message}")
+        await _raise_ocr_http_error("ID card OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"ID card OCR service network error: {e}")
@@ -381,7 +389,7 @@ async def bank_card_ocr(
 
     except OCRError as e:
         logger.error(f"Bank card OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"Bank card OCR failed: {e.message}")
+        await _raise_ocr_http_error("Bank card OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"Bank card OCR service network error: {e}")
@@ -428,7 +436,7 @@ async def business_license_ocr(
 
     except OCRError as e:
         logger.error(f"Business license OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"Business license OCR failed: {e.message}")
+        await _raise_ocr_http_error("Business license OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"Business license OCR service network error: {e}")
@@ -475,7 +483,7 @@ async def vat_invoice_ocr(
 
     except OCRError as e:
         logger.error(f"VAT invoice OCR business logic error: {e.message}")
-        raise HTTPException(status_code=400, detail=f"VAT invoice OCR failed: {e.message}")
+        await _raise_ocr_http_error("VAT invoice OCR", e, points_context)
 
     except httpx.HTTPError as e:
         logger.error(f"VAT invoice OCR service network error: {e}")
@@ -487,4 +495,3 @@ async def vat_invoice_ocr(
     except Exception as e:
         logger.error(f"Unexpected error in VAT invoice OCR: {e}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred during VAT invoice OCR")
-

@@ -7,6 +7,7 @@ from app.logger import get_logger
 from app.schemas.ocr import DocumentOCRResponse
 from app.utils.ocr.base import OCRError, XFYunOCRClient
 from app.utils.ocr.config import DOCUMENT_OCR_CONFIG
+from app.utils.ocr.error_policy import classify_ocr_failure
 
 logger = get_logger(__name__)
 
@@ -81,7 +82,14 @@ class DocumentOCRClient(XFYunOCRClient):
 
             if model.header.code != 0:
                 error_message = model.header.message or "Unknown API error"
-                raise OCRError(f"API returned error: {error_message}")
+                decision = classify_ocr_failure(model.header.code, error_message)
+                raise OCRError(
+                    error_message,
+                    code=model.header.code,
+                    should_deduct_points=decision.should_deduct_points,
+                    status_code=decision.http_status,
+                    category=decision.category.value,
+                )
 
             logger.info("Document OCR processing completed successfully")
             return model

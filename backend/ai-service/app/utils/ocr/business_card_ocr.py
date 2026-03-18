@@ -8,6 +8,7 @@ from fastapi import UploadFile
 from app.logger import get_logger
 from app.utils.ocr.base import OCRError, XFYunOCRClient
 from app.utils.ocr.config import BUSINESS_CARD_CONFIG
+from app.utils.ocr.error_policy import classify_ocr_failure
 
 logger = get_logger(__name__)
 
@@ -37,6 +38,13 @@ class BusinessCardOCRClient(XFYunOCRClient):
         code = result.get("code")
         if code != "0":
             error_msg = result.get("desc", "Unknown error")
-            raise OCRError(f"OCR failed: {error_msg}")
+            decision = classify_ocr_failure(code, error_msg)
+            raise OCRError(
+                error_msg,
+                code=code,
+                should_deduct_points=decision.should_deduct_points,
+                status_code=decision.http_status,
+                category=decision.category.value,
+            )
 
         return result.get("data", {})

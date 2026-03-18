@@ -15,8 +15,20 @@ logger = get_logger(__name__)
 class OCRError(Exception):
     """Custom exception for OCR-related errors."""
 
-    def __init__(self, msg: str):
+    def __init__(
+        self,
+        msg: str,
+        *,
+        code: str | int | None = None,
+        should_deduct_points: bool = False,
+        status_code: int = 400,
+        category: str | None = None,
+    ):
         self.message = msg
+        self.code = code
+        self.should_deduct_points = should_deduct_points
+        self.status_code = status_code
+        self.category = category
         super().__init__(msg)
 
 

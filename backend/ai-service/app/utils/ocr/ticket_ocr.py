@@ -8,6 +8,7 @@ from fastapi import UploadFile
 from app.logger import get_logger
 from app.utils.ocr.base import OCRError, XFYunOCRClient
 from app.utils.ocr.config import TICKET_OCR_CONFIG
+from app.utils.ocr.error_policy import classify_ocr_failure
 
 logger = get_logger(__name__)
 
@@ -71,7 +72,14 @@ class TicketOCRClient(XFYunOCRClient):
         header = result.get("header", {})
         if header.get("code") != 0:
             error_msg = header.get("message", "Unknown error")
-            raise OCRError(f"OCR failed: {error_msg}")
+            decision = classify_ocr_failure(header.get("code"), error_msg)
+            raise OCRError(
+                error_msg,
+                code=header.get("code"),
+                should_deduct_points=decision.should_deduct_points,
+                status_code=decision.http_status,
+                category=decision.category.value,
+            )
 
         # 解析结果
         payload_result = result.get("payload", {}).get("result", {})

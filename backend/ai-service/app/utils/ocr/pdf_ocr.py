@@ -9,6 +9,7 @@ from app.logger import get_logger
 from app.schemas.ocr import PDFOCRResponse
 from app.utils.ocr.base import OCRError, XFYunOCRClient
 from app.utils.ocr.config import PDF_OCR_CONFIG
+from app.utils.ocr.error_policy import classify_ocr_failure
 
 logger = get_logger(__name__)
 
@@ -47,7 +48,14 @@ class PDFOCRClient(XFYunOCRClient):
         # 检查响应状态 (flag 是布尔值)
         if not result.get("flag"):
             error_msg = result.get("desc", "Unknown error")
-            raise OCRError(f"Failed to create PDF OCR task: {error_msg}")
+            decision = classify_ocr_failure(result.get("code"), error_msg)
+            raise OCRError(
+                error_msg,
+                code=result.get("code"),
+                should_deduct_points=decision.should_deduct_points,
+                status_code=decision.http_status,
+                category=decision.category.value,
+            )
 
         return result.get("data", {})
 
@@ -61,7 +69,14 @@ class PDFOCRClient(XFYunOCRClient):
 
         if not result.get("flag"):
             error_msg = result.get("desc", "Unknown error")
-            raise OCRError(f"Failed to query task status: {error_msg}")
+            decision = classify_ocr_failure(result.get("code"), error_msg)
+            raise OCRError(
+                error_msg,
+                code=result.get("code"),
+                should_deduct_points=decision.should_deduct_points,
+                status_code=decision.http_status,
+                category=decision.category.value,
+            )
 
         return result.get("data", {})
 
@@ -83,7 +98,14 @@ class PDFOCRClient(XFYunOCRClient):
             if status == "FINISH":
                 return task_data
             elif status == "FAIL":
-                raise OCRError(f"Task {task_no} failed")
+                decision = classify_ocr_failure("TASK_FAIL", f"Task {task_no} failed")
+                raise OCRError(
+                    f"Task {task_no} failed",
+                    code="TASK_FAIL",
+                    should_deduct_points=decision.should_deduct_points,
+                    status_code=decision.http_status,
+                    category=decision.category.value,
+                )
 
             # 等待后继续轮询
             await asyncio.sleep(self.poll_interval)

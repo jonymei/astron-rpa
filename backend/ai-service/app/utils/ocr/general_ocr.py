@@ -21,6 +21,7 @@ from app.config import get_settings
 from app.logger import get_logger
 from app.schemas.ocr import OCRGeneralResponseBody
 from app.utils.ocr.base import OCRError
+from app.utils.ocr.error_policy import classify_ocr_failure
 
 logger = get_logger(__name__)
 
@@ -120,7 +121,14 @@ async def recognize_text_from_image(
 
         if model.header.code != 0:
             error_message = getattr(model.header, "msg", None) or model.header.message or "Unknown API error"
-            raise OCRError(f"API returned error: {error_message}")
+            decision = classify_ocr_failure(model.header.code, error_message)
+            raise OCRError(
+                error_message,
+                code=model.header.code,
+                should_deduct_points=decision.should_deduct_points,
+                status_code=decision.http_status,
+                category=decision.category.value,
+            )
 
         logger.info("OCR processing completed successfully")
         return model
