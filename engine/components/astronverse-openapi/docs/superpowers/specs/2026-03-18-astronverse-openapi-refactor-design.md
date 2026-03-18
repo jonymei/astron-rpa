@@ -57,19 +57,31 @@ engine/components/astronverse-openapi/
 
 ## 数据流
 
+后端接口分两种传输格式，`GatewayClient` 需要支持两条路径：
+
+**JSON 路径**（`general`、`document`）：
 ```
-用户调用 OpenApi.ocr_xxx() / OpenApi.speech_xxx()
+用户调用 → 读取文件 → base64 编码
     ↓
-astronverse-openapi 读取文件 → base64 编码
-    ↓
-GatewayClient.post(path, payload)
+GatewayClient.post(path, {"image": base64, ...})  # JSON body
     ↓
 http://127.0.0.1:{GATEWAY_PORT}/api/rpa-ai-service/{path}
     ↓
-ai-service 路由处理 → 讯飞 API
-    ↓
-返回结果 → astronverse-openapi 解析 → 用户
+返回 JSON → 解析 → 用户
 ```
+
+**Multipart 路径**（`ticket`、`id-card`、`bank-card`、`business-card`、`business-license`、`vat-invoice`、`pdf`）：
+```
+用户调用 → 读取文件字节
+    ↓
+GatewayClient.post_multipart(path, file_bytes, filename, extra_fields)
+    ↓
+http://127.0.0.1:{GATEWAY_PORT}/api/rpa-ai-service/{path}  # multipart/form-data
+    ↓
+返回 JSON → 解析 → 用户
+```
+
+`GatewayClient` 需要新增 `post_multipart(path, file_bytes, filename, extra_fields=None)` 方法，使用 `requests` 的 `files` 参数发送。
 
 ---
 
@@ -139,6 +151,14 @@ def ocr_document(
 ) -> dict
 ```
 
+**说明**：文档识别为单文件模式，不支持批量处理（无 `is_multi` 参数）。
+
+**响应解析**：
+- 后端返回 `{"header": {...}, "payload": {"result": {"text": base64_str}}}`
+- `text` 字段：从 `payload.result.text` base64 解码后得到 JSON 字符串，再解析为 dict
+- `raw` 字段：解码后的完整 JSON 内容
+- `saved_file` 字段：如果 `is_save=True`，保存到本地的文件路径
+
 输出：`{"text": str, "raw": dict, "saved_file": str}`
 
 ### ocr_pdf（PDF识别）
@@ -153,7 +173,9 @@ def ocr_pdf(
 ) -> dict
 ```
 
-输出：`{"task_no": str, "status": str, "page_count": int, "result_url": str, "saved_file": str}`
+**说明**：PDF 识别为异步任务，结果通过 `result_url` 下载，不支持 `is_save` 直接保存（结果是远程 URL，不是本地文件）。
+
+输出：`{"task_no": str, "status": str, "page_count": int, "result_url": str}`
 计费：按页数，10 积分/页（由 ai-service 处理）
 
 ---
@@ -239,19 +261,148 @@ atomic:
 
   OpenApi.ocr_id_card:
     title: 身份证识别
-    # ... 类似通用模式
+    comment: 识别身份证正反面信息
+    icon: id-card-recognition
+    helpManual: ''
+    inputList:
+      - key: is_multi
+        title: 批量处理
+        tip: 选择"否"处理单张，选择"是"按文件夹批量处理
+      - key: src_file
+        title: 图像文件
+        tip: ''
+      - key: src_dir
+        title: 图像文件夹
+        tip: ''
+      - key: is_save
+        title: 输出文档
+        tip: 是否保存识别结果为 Excel 文档
+      - key: dst_file
+        title: 文档输出路径
+        tip: ''
+      - key: dst_file_name
+        title: 文档输出文件名
+        tip: ''
+    outputList:
+      - key: ocr_id_card
+        title: 身份证识别结果
+        tip: 输出身份证识别结果列表
 
   OpenApi.ocr_bank_card:
     title: 银行卡识别
+    comment: 识别银行卡号、有效期等信息
+    icon: bank-card-recognition
+    helpManual: ''
+    inputList:
+      - key: is_multi
+        title: 批量处理
+        tip: 选择"否"处理单张，选择"是"按文件夹批量处理
+      - key: src_file
+        title: 图像文件
+        tip: ''
+      - key: src_dir
+        title: 图像文件夹
+        tip: ''
+      - key: is_save
+        title: 输出文档
+        tip: 是否保存识别结果为 Excel 文档
+      - key: dst_file
+        title: 文档输出路径
+        tip: ''
+      - key: dst_file_name
+        title: 文档输出文件名
+        tip: ''
+    outputList:
+      - key: ocr_bank_card
+        title: 银行卡识别结果
+        tip: 输出银行卡识别结果列表
 
   OpenApi.ocr_business_card:
     title: 名片识别
+    comment: 识别名片上的姓名、电话、邮箱等信息
+    icon: business-card-recognition
+    helpManual: ''
+    inputList:
+      - key: is_multi
+        title: 批量处理
+        tip: 选择"否"处理单张，选择"是"按文件夹批量处理
+      - key: src_file
+        title: 图像文件
+        tip: ''
+      - key: src_dir
+        title: 图像文件夹
+        tip: ''
+      - key: is_save
+        title: 输出文档
+        tip: 是否保存识别结果为 Excel 文档
+      - key: dst_file
+        title: 文档输出路径
+        tip: ''
+      - key: dst_file_name
+        title: 文档输出文件名
+        tip: ''
+    outputList:
+      - key: ocr_business_card
+        title: 名片识别结果
+        tip: 输出名片识别结果列表
 
   OpenApi.ocr_business_license:
     title: 营业执照识别
+    comment: 识别营业执照上的企业名称、注册号等信息
+    icon: business-license-recognition
+    helpManual: ''
+    inputList:
+      - key: is_multi
+        title: 批量处理
+        tip: 选择"否"处理单张，选择"是"按文件夹批量处理
+      - key: src_file
+        title: 图像文件
+        tip: ''
+      - key: src_dir
+        title: 图像文件夹
+        tip: ''
+      - key: is_save
+        title: 输出文档
+        tip: 是否保存识别结果为 Excel 文档
+      - key: dst_file
+        title: 文档输出路径
+        tip: ''
+      - key: dst_file_name
+        title: 文档输出文件名
+        tip: ''
+    outputList:
+      - key: ocr_business_license
+        title: 营业执照识别结果
+        tip: 输出营业执照识别结果列表
 
   OpenApi.ocr_vat_invoice:
     title: 增值税发票识别
+    comment: 识别增值税发票上的发票代码、金额等信息
+    icon: vat-invoice-recognition
+    helpManual: ''
+    inputList:
+      - key: is_multi
+        title: 批量处理
+        tip: 选择"否"处理单张，选择"是"按文件夹批量处理
+      - key: src_file
+        title: 图像文件
+        tip: ''
+      - key: src_dir
+        title: 图像文件夹
+        tip: ''
+      - key: is_save
+        title: 输出文档
+        tip: 是否保存识别结果为 Excel 文档
+      - key: dst_file
+        title: 文档输出路径
+        tip: ''
+      - key: dst_file_name
+        title: 文档输出文件名
+        tip: ''
+    outputList:
+      - key: ocr_vat_invoice
+        title: 增值税发票识别结果
+        tip: 输出增值税发票识别结果列表
 
 options:
   Bool:
@@ -305,13 +456,30 @@ def _deprecated(old_name: str, new_fn):
         return new_fn(*args, **kwargs)
     return wrapper
 
-# 旧名称 → 新名称
+# 旧名称 → 新名称（直接映射）
 id_card = _deprecated("id_card", ocr_id_card)
 business_license = _deprecated("business_license", ocr_business_license)
 vat_invoice = _deprecated("vat_invoice", ocr_vat_invoice)
 common_ocr = _deprecated("common_ocr", ocr_general)
-train_ticket = _deprecated("train_ticket", ocr_ticket)
-taxi_ticket = _deprecated("taxi_ticket", ocr_ticket)
+
+# train_ticket / taxi_ticket → ocr_ticket（需要硬编码 ticket_type）
+def train_ticket(*args, **kwargs):
+    warnings.warn(
+        "OpenApi.train_ticket is deprecated, use OpenApi.ocr_ticket with ticket_type='train_ticket'",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    kwargs.setdefault("ticket_type", "train_ticket")
+    return ocr_ticket(*args, **kwargs)
+
+def taxi_ticket(*args, **kwargs):
+    warnings.warn(
+        "OpenApi.taxi_ticket is deprecated, use OpenApi.ocr_ticket with ticket_type='taxi_receipt'",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    kwargs.setdefault("ticket_type", "taxi_receipt")
+    return ocr_ticket(*args, **kwargs)
 ```
 
 ---
@@ -336,9 +504,12 @@ taxi_ticket = _deprecated("taxi_ticket", ocr_ticket)
 
 ## 迁移步骤
 
-1. 创建 `speech/` 和 `ocr/` 子目录，迁移现有代码
-2. 实现新增 OCR 能力（document、pdf、bank_card、business_card）
-3. 将旧 OCR 能力改为走网关（删除 `core_iflytek.py` 中的直连逻辑）
-4. 更新 `config.yaml`
-5. 在 `__init__.py` 添加 deprecated 别名
-6. 更新测试
+1. **扩展 GatewayClient**：新增 `post_multipart(path, file_bytes, filename, extra_fields=None)` 方法
+2. **创建目录结构**：创建 `speech/` 和 `ocr/` 子目录
+3. **迁移语音能力**：将现有语音函数从 `openapi.py` 迁移到 `speech/` 子模块（纯文件移动，逻辑不变）
+4. **实现新增 OCR 能力**：`document`、`pdf`、`bank_card`、`business_card`
+5. **改造旧 OCR 能力**：将 `id_card`、`business_license`、`vat_invoice`、`train_ticket`、`taxi_ticket`、`common_ocr` 改为走网关
+6. **删除直连代码**：删除 `core_iflytek.py`
+7. **更新 config.yaml**：按新结构补充配置
+8. **添加 deprecated 别名**：在 `__init__.py` 中添加向后兼容代码
+9. **更新测试**：新增 `tests/ocr/` 目录，补充测试用例
