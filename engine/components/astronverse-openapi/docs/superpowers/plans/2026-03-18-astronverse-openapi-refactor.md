@@ -73,6 +73,7 @@ def post_multipart(
    - `ocr/business_card.py`
    - `ocr/business_license.py`
    - `ocr/vat_invoice.py`
+   - `ocr/_common.py`
 
 2. 在 `tests/` 下创建 `tests/ocr/` 目录及 `__init__.py`
 
@@ -135,7 +136,8 @@ from astronverse.openapi.error import BaseException, IMAGE_EMPTY
 
 
 def _read_image_bytes(src_file: str) -> tuple[str, bytes]:
-    files = utils.generate_src_files(src_file, file_type="file")
+    """读取单个图像文件，返回 (filename, bytes)"""
+    files = utils.generate_src_files(src_file)  # file_type="image" 默认
     if not files:
         raise BaseException(IMAGE_EMPTY, "图像路径不存在或格式错误")
     path = files[0]
@@ -144,7 +146,8 @@ def _read_image_bytes(src_file: str) -> tuple[str, bytes]:
 
 
 def _collect_dir_files(src_dir: str) -> list[str]:
-    files = utils.generate_src_files(src_dir, file_type="folder")
+    """收集文件夹中的所有图像文件"""
+    files = utils.generate_src_files(src_dir)  # 传入目录时自动过滤图像
     if not files:
         raise BaseException(IMAGE_EMPTY, "图像文件夹不存在或为空")
     return files
@@ -160,22 +163,20 @@ def _run_multipart_ocr(
     dst_file_name: str,
     extra_fields: dict | None = None,
 ) -> list:
-    if is_multi:
-        file_paths = _collect_dir_files(src_dir)
+    file_paths = _collect_dir_files(src_dir) if is_multi else None
+    if not is_multi:
+        fname, fbytes = _read_image_bytes(src_file)
+        file_paths = [(fname, fbytes)]
     else:
-        filename, file_bytes = _read_image_bytes(src_file)
-        file_paths = [src_file]
+        file_paths = [(os.path.basename(fp), open(fp, "rb").read()) for fp in file_paths]
 
     results = []
-    for fp in file_paths:
-        fname = os.path.basename(fp)
-        with open(fp, "rb") as f:
-            fbytes = f.read()
+    for fname, fbytes in file_paths:
         resp = GatewayClient.post_multipart(api_path, fbytes, fname, extra_fields)
-        results.append(resp.get("payload", resp))
+        results.append(resp)
 
     if is_save and results:
-        utils.save_to_excel(results, dst_file, dst_file_name)
+        utils.write_to_excel(dst_file, dst_file_name, {}, results)
 
     return results
 ```
@@ -277,8 +278,9 @@ def test_ocr_ticket_train(mock_post):
     result = ocr_ticket(ticket_type="train_ticket", src_file="/fake/ticket.jpg", is_save=False)
     assert len(result) == 1
     _, kwargs = mock_post.call_args
-    # extra_fields 包含 ticket_type
-    assert mock_post.call_args[0][3]["ticket_type"] == "train_ticket"
+    # extra_fields 是第 4 个位置参数
+    call_args = mock_post.call_args
+    assert call_args.args[3]["ticket_type"] == "train_ticket"
 ```
 
 **验证**: `pytest tests/ocr/test_ocr_ticket.py -v`
@@ -317,7 +319,7 @@ def ocr_document(
     dst_file: PATH = "",
     dst_file_name: str = "document_ocr",
 ) -> dict:
-    files = utils.generate_src_files(src_file, file_type="file")
+    files = utils.generate_src_files(src_file)  # file_type="image" 默认，过滤图像格式
     if not files:
         raise BaseException(IMAGE_EMPTY, "文件路径不存在或格式错误")
 
@@ -336,7 +338,7 @@ def ocr_document(
 
     saved_file = ""
     if is_save:
-        saved_file = utils.save_text(text, dst_file, dst_file_name)
+        saved_file = utils.write_text_file(dst_file, dst_file_name, text, suffix=".txt")
 
     return {"text": text, "raw": raw, "saved_file": saved_file}
 ```
