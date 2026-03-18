@@ -1,4 +1,4 @@
-#name: rpa-opensource-studio
+name: astron-rpa-oss
 x-env-file: &env_file
   - .env
 
