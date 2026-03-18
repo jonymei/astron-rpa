@@ -6,13 +6,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     APP_NAME: str = "AI Service"
     API_VERSION: str = "1.0"
-    DATABASE_URL: str
-    DATABASE_USERNAME: str
-    DATABASE_PASSWORD: str
-    REDIS_URL: str
+    DATABASE_URL: str = ""
+    DATABASE_USERNAME: str = ""
+    DATABASE_PASSWORD: str = ""
+    REDIS_URL: str = ""
 
     LOG_LEVEL: str = "INFO"
-    LOG_DIR: str = "/app/log"
+    LOG_DIR: str = "logs"
 
     MONTHLY_GRANT_AMOUNT: int = 100000
 
@@ -26,21 +26,21 @@ class Settings(BaseSettings):
     XFYUN_SPEECH_POLL_INTERVAL_SECONDS: float = 2.0
     XFYUN_SPEECH_POLL_TIMEOUT_SECONDS: int = 300
 
-    AICHAT_BASE_URL: str
-    AICHAT_API_KEY: str
+    AICHAT_BASE_URL: str = ""
+    AICHAT_API_KEY: str = ""
 
-    CUA_BASE_URL: str
-    CUA_API_KEY: str
+    CUA_BASE_URL: str = ""
+    CUA_API_KEY: str = ""
 
-    XFYUN_APP_ID: str
-    XFYUN_API_SECRET: str
-    XFYUN_API_KEY: str
+    XFYUN_APP_ID: str = ""
+    XFYUN_API_SECRET: str = ""
+    XFYUN_API_KEY: str = ""
 
     JFBYM_ENDPOINT: str = "http://api.jfbym.com/api/YmServer/customApi"
-    JFBYM_API_TOKEN: str
+    JFBYM_API_TOKEN: str = ""
 
     model_config = SettingsConfigDict(
-        env_file=None,
+        env_file=".env",
         case_sensitive=False,
         extra="ignore",
     )

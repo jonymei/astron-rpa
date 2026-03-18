@@ -41,3 +41,45 @@ class OCRGeneralResponseInnerPayload(BaseModel):
 class OCRGeneralResponseBody(BaseModel):
     header: OCRGeneralResponseInnerHeader
     payload: Optional[OCRGeneralResponseInnerPayload]
+
+
+# ============ Document OCR (OCR LLM) Schemas ============
+
+
+class DocumentOCRRequest(BaseModel):
+    image: str = Field(..., description="Base64 编码的图像数据", examples=["iVBORw0KGgoAAAANSUhEUgAA..."])
+    encoding: str = Field("jpg", description="图像格式 (jpg, png, bmp)", examples=["jpg"])
+    output_level: int = Field(1, description="输出级别 (1-3)", examples=[1])
+    output_format: str = Field("markdown", description="输出格式 (markdown, json)", examples=["markdown"])
+
+
+class DocumentOCRResponseHeader(BaseModel):
+    code: int = Field(..., description="返回码，0表示成功", examples=[0])
+    message: str = Field(..., description="返回信息", examples=["success"])
+    sid: str = Field(..., description="会话唯一标识", examples=["ase000fa8ab@hu196fbeb910905c4882"])
+
+
+class DocumentOCRResponseResult(BaseModel):
+    compress: str = Field(..., description="文本压缩格式", examples=["raw"])
+    encoding: str = Field(..., description="文本编码格式", examples=["utf8"])
+    format: str = Field(..., description="文本格式", examples=["json"])
+    text: str = Field(..., description="返回的文本数据，需要 base64 解码", examples=["fQogXQp9Cg=="])
+
+
+class DocumentOCRResponsePayload(BaseModel):
+    result: DocumentOCRResponseResult
+
+
+class DocumentOCRResponse(BaseModel):
+    header: DocumentOCRResponseHeader
+    payload: Optional[DocumentOCRResponsePayload] = None
+
+
+# ============ PDF OCR Schemas ============
+
+
+class PDFOCRResponse(BaseModel):
+    task_no: str = Field(..., description="任务编号", examples=["task_123456"])
+    status: str = Field(..., description="任务状态 (completed, failed, processing)", examples=["completed"])
+    page_count: int = Field(..., description="PDF 页数", examples=[10])
+    result_url: Optional[str] = Field(None, description="结果下载链接", examples=["https://example.com/result.json"])

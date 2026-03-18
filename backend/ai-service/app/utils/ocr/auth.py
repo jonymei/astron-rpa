@@ -1,0 +1,101 @@
+"""Authentication strategies for XunFei OCR APIs."""
+
+import base64
+import hashlib
+import hmac
+from abc import ABC, abstractmethod
+from datetime import datetime
+from time import mktime
+from urllib.parse import urlencode
+from wsgiref.handlers import format_date_time
+
+from app.config import get_settings
+from app.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class AuthStrategy(ABC):
+    """Abstract base class for authentication strategies."""
+
+    def __init__(self):
+        self.app_id = get_settings().XFYUN_APP_ID
+        self.api_key = get_settings().XFYUN_API_KEY
+        self.api_secret = get_settings().XFYUN_API_SECRET
+
+    @abstractmethod
+    def build_auth_url(self, url: str) -> str:
+        """构建带认证参数的 URL."""
+        pass
+
+    @abstractmethod
+    def build_auth_headers(self) -> dict:
+        """构建认证请求头."""
+        pass
+
+
+class HmacSHA256Auth(AuthStrategy):
+    """HMAC-SHA256 authentication strategy for sync OCR APIs."""
+
+    def build_auth_url(self, url: str) -> str:
+        """构建带 HMAC-SHA256 签名的 URL."""
+        # 解析 URL
+        stidx = url.index("://")
+        host = url[stidx + 3 :]
+        schema = url[: stidx + 3]
+        edidx = host.index("/")
+        path = host[edidx:]
+        host = host[:edidx]
+
+        # 生成时间戳
+        now = datetime.now()
+        date = format_date_time(mktime(now.timetuple()))
+
+        # 构建签名原文
+        signature_origin = f"host: {host}\ndate: {date}\nPOST {path} HTTP/1.1"
+
+        # 生成签名
+        signature_sha = hmac.new(
+            self.api_secret.encode("utf-8"), signature_origin.encode("utf-8"), digestmod=hashlib.sha256
+        ).digest()
+        signature_sha = base64.b64encode(signature_sha).decode("utf-8")
+
+        # 构建 authorization
+        authorization_origin = (
+            f'api_key="{self.api_key}", algorithm="hmac-sha256", '
+            f'headers="host date request-line", signature="{signature_sha}"'
+        )
+        authorization = base64.b64encode(authorization_origin.encode("utf-8")).decode("utf-8")
+
+        # 构建最终 URL
+        values = {"host": host, "date": date, "authorization": authorization}
+        return url + "?" + urlencode(values)
+
+    def build_auth_headers(self) -> dict:
+        """构建认证请求头."""
+        return {
+            "content-type": "application/json",
+            "app_id": self.app_id,
+        }
+
+
+class MD5HmacSHA1Auth(AuthStrategy):
+    """MD5 + HmacSHA1 authentication strategy for PDF OCR API."""
+
+    def build_auth_url(self, url: str) -> str:
+        """PDF OCR 不需要在 URL 中添加认证参数."""
+        return url
+
+    def build_auth_headers(self) -> dict:
+        """构建 MD5 + HmacSHA1 认证请求头."""
+        # 生成时间戳（毫秒）
+        timestamp = str(int(datetime.now().timestamp() * 1000))
+
+        # 第一步：MD5(appId + timestamp)
+        md5_input = self.app_id + timestamp
+        md5_hash = hashlib.md5(md5_input.encode("utf-8")).hexdigest()
+
+        # 第二步：HmacSHA1(md5_hash, api_secret)
+        signature = hmac.new(self.api_secret.encode("utf-8"), md5_hash.encode("utf-8"), digestmod=hashlib.sha1).hexdigest()
+
+        return {"appId": self.app_id, "timestamp": timestamp, "signature": signature}
