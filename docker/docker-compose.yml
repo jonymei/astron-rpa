@@ -208,9 +208,9 @@ services:
 
   ai-service:
     image: ghcr.io/iflytek/astron-rpa/ai-service:latest
-    # build:
-    #  context: ..
-    #  dockerfile: backend/ai-service/Dockerfile
+    build:
+      context: ..
+      dockerfile: backend/ai-service/Dockerfile
     container_name: rpa-opensource-ai-service
     restart: always
     env_file: *env_file
