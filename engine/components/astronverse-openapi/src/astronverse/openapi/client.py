@@ -34,3 +34,13 @@ class GatewayClient:
     @staticmethod
     def post(path: str, payload: dict) -> dict:
         return GatewayClient._post_json(f"{GatewayClient._gateway_base_url()}{path}", payload)
+
+    @staticmethod
+    def post_multipart(path: str, file_bytes: bytes, filename: str, extra_fields: dict | None = None) -> dict:
+        url = f"{GatewayClient._gateway_base_url()}{path}"
+        files = {"file": (filename, file_bytes)}
+        data = extra_fields or {}
+        response = requests.post(url, files=files, data=data)
+        if response.status_code != 200:
+            raise BaseException(AI_SERVER_ERROR, f"ai服务器无响应或错误: {response.text}")
+        return response.json()
