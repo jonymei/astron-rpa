@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     XFYUN_API_SECRET: str = ""
     XFYUN_API_KEY: str = ""
 
+    XFYUN_INTSIG_API_KEY: str = ""
+
     JFBYM_ENDPOINT: str = "http://api.jfbym.com/api/YmServer/customApi"
     JFBYM_API_TOKEN: str = ""
 

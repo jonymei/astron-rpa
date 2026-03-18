@@ -83,3 +83,69 @@ class PDFOCRResponse(BaseModel):
     status: str = Field(..., description="任务状态 (completed, failed, processing)", examples=["completed"])
     page_count: int = Field(..., description="PDF 页数", examples=[10])
     result_url: Optional[str] = Field(None, description="结果下载链接", examples=["https://example.com/result.json"])
+
+
+# ============ Ticket OCR Schemas ============
+
+
+class TicketOCRRequest(BaseModel):
+    ocr_type: str = Field(
+        "air_itinerary",
+        description="票据类型 (air_itinerary: 行程单, train_ticket: 火车票, taxi_receipt: 出租车票等)",
+        examples=["air_itinerary"],
+    )
+
+
+class TicketOCRResponse(BaseModel):
+    data: dict = Field(..., description="识别结果数据", examples=[{}])
+
+
+# ============ Business Card OCR Schemas ============
+
+
+class BusinessCardOCRResponse(BaseModel):
+    code: str = Field(..., description="返回码，0表示成功", examples=["0"])
+    desc: str = Field(..., description="返回描述", examples=["success"])
+    data: dict = Field(..., description="名片识别结果", examples=[{}])
+    sid: Optional[str] = Field(None, description="会话ID", examples=["abc123"])
+
+
+# ============ ID Card OCR Schemas ============
+
+
+class IDCardOCRResponse(BaseModel):
+    code: str = Field(..., description="返回码，0表示成功", examples=["0"])
+    desc: str = Field(..., description="返回描述", examples=["success"])
+    data: dict = Field(..., description="身份证识别结果", examples=[{}])
+    sid: Optional[str] = Field(None, description="会话ID", examples=["abc123"])
+
+
+# ============ Bank Card OCR Schemas ============
+
+
+class BankCardOCRResponse(BaseModel):
+    code: str = Field(..., description="返回码，0表示成功", examples=["0"])
+    desc: str = Field(..., description="返回描述", examples=["success"])
+    data: dict = Field(..., description="银行卡识别结果", examples=[{}])
+    sid: Optional[str] = Field(None, description="会话ID", examples=["abc123"])
+
+
+# ============ Business License OCR Schemas ============
+
+
+class BusinessLicenseOCRResponse(BaseModel):
+    code: str = Field(..., description="返回码，0表示成功", examples=["0"])
+    desc: str = Field(..., description="返回描述", examples=["success"])
+    data: dict = Field(..., description="营业执照识别结果", examples=[{}])
+    sid: Optional[str] = Field(None, description="会话ID", examples=["abc123"])
+
+
+# ============ VAT Invoice OCR Schemas ============
+
+
+class VATInvoiceOCRResponse(BaseModel):
+    code: str = Field(..., description="返回码，0表示成功", examples=["0"])
+    desc: str = Field(..., description="返回描述", examples=["success"])
+    data: dict = Field(..., description="增值税发票识别结果", examples=[{}])
+    sid: Optional[str] = Field(None, description="会话ID", examples=["abc123"])
+

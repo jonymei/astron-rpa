@@ -1,8 +1,11 @@
 """Unit tests for OCR authentication strategies."""
 
-import pytest
+import base64
+import hashlib
+from unittest.mock import patch
 
-from app.utils.ocr.auth import HmacSHA256Auth, MD5HmacSHA1Auth
+from app.config import get_settings
+from app.utils.ocr.auth import HmacSHA256Auth, MD5Auth, MD5HmacSHA1Auth
 
 
 class TestHmacSHA256Auth:
@@ -59,5 +62,27 @@ class TestMD5HmacSHA1Auth:
         # Timestamp should be numeric
         assert headers["timestamp"].isdigit()
 
-        # Signature should be hex string
-        assert len(headers["signature"]) == 40  # SHA1 produces 40 hex chars
+        # Signature is a Base64-encoded HMAC-SHA1 digest
+        assert len(headers["signature"]) == 28
+        assert base64.b64decode(headers["signature"])
+
+
+class TestMD5Auth:
+    """Test MD5 authentication strategy for specialized OCR APIs."""
+
+    def test_build_auth_headers_uses_intsig_api_key_for_checksum(self, monkeypatch):
+        monkeypatch.setenv("XFYUN_APP_ID", "demo-app-id")
+        monkeypatch.setenv("XFYUN_API_KEY", "general-api-key")
+        monkeypatch.setenv("XFYUN_INTSIG_API_KEY", "intsig-api-key")
+        get_settings.cache_clear()
+
+        auth = MD5Auth()
+
+        with patch("time.time", return_value=1700000000):
+            headers = auth.build_auth_headers()
+
+        expected_checksum = hashlib.md5(
+            f"intsig-api-key{headers['X-CurTime']}{headers['X-Param']}".encode("utf-8")
+        ).hexdigest()
+
+        assert headers["X-CheckSum"] == expected_checksum

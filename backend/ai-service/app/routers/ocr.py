@@ -5,16 +5,29 @@ from app.config import get_settings
 from app.dependencies.points import PointChecker, PointsContext
 from app.logger import get_logger
 from app.schemas.ocr import (
+    BankCardOCRResponse,
+    BusinessCardOCRResponse,
+    BusinessLicenseOCRResponse,
     DocumentOCRRequest,
     DocumentOCRResponse,
+    IDCardOCRResponse,
     OCRGeneralRequestBody,
     OCRGeneralResponseBody,
     PDFOCRResponse,
+    TicketOCRRequest,
+    TicketOCRResponse,
+    VATInvoiceOCRResponse,
 )
 from app.services.point import PointTransactionType
 from app.utils.ocr import OCRError, recognize_text_from_image
+from app.utils.ocr.bank_card_ocr import BankCardOCRClient
+from app.utils.ocr.business_card_ocr import BusinessCardOCRClient
+from app.utils.ocr.business_license_ocr import BusinessLicenseOCRClient
 from app.utils.ocr.document_ocr import DocumentOCRClient
+from app.utils.ocr.id_card_ocr import IDCardOCRClient
 from app.utils.ocr.pdf_ocr import PDFOCRClient
+from app.utils.ocr.ticket_ocr import TicketOCRClient
+from app.utils.ocr.vat_invoice_ocr import VATInvoiceOCRClient
 
 logger = get_logger(__name__)
 
@@ -190,3 +203,288 @@ async def pdf_ocr(
     except Exception as e:
         logger.error(f"Unexpected error in PDF OCR: {e}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred during PDF OCR")
+
+
+@router.post("/ticket", response_model=TicketOCRResponse)
+async def ticket_ocr(
+    file: UploadFile = File(...),
+    ocr_type: str = Form("air_itinerary"),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    票据卡证识别.
+
+    支持行程单、火车票、出租车票等多种票据类型识别。
+
+    Args:
+        file: 上传的图片文件
+        ocr_type: 票据类型 (air_itinerary, train_ticket, taxi_receipt等)
+
+    Returns:
+        TicketOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = TicketOCRClient()
+        result = await client.recognize(file=file, ocr_type=ocr_type)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("Ticket OCR processing successful, points deducted")
+
+        return {"data": result}
+
+    except OCRError as e:
+        logger.error(f"Ticket OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"Ticket OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"Ticket OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Ticket OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Ticket OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during Ticket OCR")
+
+
+@router.post("/business-card", response_model=BusinessCardOCRResponse)
+async def business_card_ocr(
+    file: UploadFile = File(...),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    名片识别.
+
+    识别名片上的姓名、电话、邮箱、公司等信息。
+
+    Args:
+        file: 上传的图片文件
+
+    Returns:
+        BusinessCardOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = BusinessCardOCRClient()
+        result = await client.recognize(file)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("Business card OCR processing successful, points deducted")
+
+        return result
+
+    except OCRError as e:
+        logger.error(f"Business card OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"Business card OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"Business card OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Business card OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Business card OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during Business card OCR")
+
+
+@router.post("/id-card", response_model=IDCardOCRResponse)
+async def id_card_ocr(
+    file: UploadFile = File(...),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    身份证识别.
+
+    识别身份证正反面信息，包括姓名、身份证号、地址等。
+
+    Args:
+        file: 上传的图片文件
+
+    Returns:
+        IDCardOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = IDCardOCRClient()
+        result = await client.recognize(file)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("ID card OCR processing successful, points deducted")
+
+        return result
+
+    except OCRError as e:
+        logger.error(f"ID card OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"ID card OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"ID card OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="ID card OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in ID card OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during ID card OCR")
+
+
+@router.post("/bank-card", response_model=BankCardOCRResponse)
+async def bank_card_ocr(
+    file: UploadFile = File(...),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    银行卡识别.
+
+    识别银行卡号、有效期、持卡人姓名等信息。
+
+    Args:
+        file: 上传的图片文件
+
+    Returns:
+        BankCardOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = BankCardOCRClient()
+        result = await client.recognize(file)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("Bank card OCR processing successful, points deducted")
+
+        return result
+
+    except OCRError as e:
+        logger.error(f"Bank card OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"Bank card OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"Bank card OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Bank card OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Bank card OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during Bank card OCR")
+
+
+@router.post("/business-license", response_model=BusinessLicenseOCRResponse)
+async def business_license_ocr(
+    file: UploadFile = File(...),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    营业执照识别.
+
+    识别营业执照上的企业名称、注册号、法定代表人等信息。
+
+    Args:
+        file: 上传的图片文件
+
+    Returns:
+        BusinessLicenseOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = BusinessLicenseOCRClient()
+        result = await client.recognize(file)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("Business license OCR processing successful, points deducted")
+
+        return result
+
+    except OCRError as e:
+        logger.error(f"Business license OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"Business license OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"Business license OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Business license OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Business license OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during Business license OCR")
+
+
+@router.post("/vat-invoice", response_model=VATInvoiceOCRResponse)
+async def vat_invoice_ocr(
+    file: UploadFile = File(...),
+    points_context: PointsContext = Depends(
+        PointChecker(50, PointTransactionType.XFYUN_COST),
+    ),
+):
+    """
+    增值税发票识别.
+
+    识别增值税发票上的发票代码、发票号码、金额等信息。
+
+    Args:
+        file: 上传的图片文件
+
+    Returns:
+        VATInvoiceOCRResponse: 识别结果
+
+    Raises:
+        HTTPException: 400/500/503 错误
+    """
+    try:
+        client = VATInvoiceOCRClient()
+        result = await client.recognize(file)
+
+        # 成功时扣除积分
+        await points_context.deduct_points()
+        logger.info("VAT invoice OCR processing successful, points deducted")
+
+        return result
+
+    except OCRError as e:
+        logger.error(f"VAT invoice OCR business logic error: {e.message}")
+        raise HTTPException(status_code=400, detail=f"VAT invoice OCR failed: {e.message}")
+
+    except httpx.HTTPError as e:
+        logger.error(f"VAT invoice OCR service network error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="VAT invoice OCR service is temporarily unavailable. Please try again later.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in VAT invoice OCR: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during VAT invoice OCR")
+

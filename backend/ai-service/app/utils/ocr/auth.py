@@ -21,6 +21,7 @@ class AuthStrategy(ABC):
     def __init__(self):
         self.app_id = get_settings().XFYUN_APP_ID
         self.api_key = get_settings().XFYUN_API_KEY
+        self.intsig_api_key = get_settings().XFYUN_INTSIG_API_KEY or self.api_key
         self.api_secret = get_settings().XFYUN_API_SECRET
 
     @abstractmethod
@@ -107,3 +108,34 @@ class MD5HmacSHA1Auth(AuthStrategy):
         signature = base64.b64encode(signature_bytes).decode("utf-8")
 
         return {"appId": self.app_id, "timestamp": timestamp, "signature": signature}
+
+
+class MD5Auth(AuthStrategy):
+    """MD5 authentication strategy for webapi OCR APIs (bankcard, idcard, etc)."""
+
+    def build_auth_url(self, url: str) -> str:
+        """这些接口不需要在 URL 中添加认证参数."""
+        return url
+
+    def build_auth_headers(self) -> dict:
+        """构建 MD5 认证请求头."""
+        import json
+        import time
+
+        # 生成时间戳（秒）
+        cur_time = str(int(time.time()))
+
+        # 构建 X-Param（业务参数，Base64编码的JSON）
+        param = {"language": "zh_cn", "location": "true"}
+        param_base64 = base64.b64encode(json.dumps(param).encode("utf-8")).decode("utf-8")
+
+        # 计算 X-CheckSum: MD5(APIKey + X-CurTime + X-Param)
+        checksum_input = self.intsig_api_key + cur_time + param_base64
+        checksum = hashlib.md5(checksum_input.encode("utf-8")).hexdigest()
+
+        return {
+            "X-Appid": self.app_id,
+            "X-CurTime": cur_time,
+            "X-Param": param_base64,
+            "X-CheckSum": checksum,
+        }

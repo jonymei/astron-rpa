@@ -1,11 +1,12 @@
 """Base client for XunFei OCR APIs."""
 
+import ssl
 from typing import Any
 
 import httpx
 
 from app.logger import get_logger
-from app.utils.ocr.auth import AuthStrategy, HmacSHA256Auth, MD5HmacSHA1Auth
+from app.utils.ocr.auth import AuthStrategy, HmacSHA256Auth, MD5Auth, MD5HmacSHA1Auth
 from app.utils.ocr.config import OCRConfig
 
 logger = get_logger(__name__)
@@ -32,6 +33,8 @@ class XFYunOCRClient:
             return HmacSHA256Auth()
         elif self.config.auth_type == "md5_hmac_sha1":
             return MD5HmacSHA1Auth()
+        elif self.config.auth_type == "md5":
+            return MD5Auth()
         else:
             raise ValueError(f"Unknown auth type: {self.config.auth_type}")
 
@@ -48,7 +51,17 @@ class XFYunOCRClient:
 
         logger.debug(f"Making {method} request to {auth_url}")
 
-        async with httpx.AsyncClient(timeout=self.config.timeout) as client:
+        # 创建自定义SSL上下文以兼容Python 3.13
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        # 设置更宽松的密码套件和协议
+        ssl_context.set_ciphers("DEFAULT@SECLEVEL=1")
+        # 允许TLSv1.2
+        ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+        ssl_context.maximum_version = ssl.TLSVersion.TLSv1_3
+
+        async with httpx.AsyncClient(timeout=self.config.timeout, verify=ssl_context) as client:
             response = await client.request(method, auth_url, headers=final_headers, **kwargs)
 
             # 如果是错误响应，记录详细信息

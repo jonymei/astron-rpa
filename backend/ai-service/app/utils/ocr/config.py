@@ -35,3 +35,63 @@ PDF_OCR_CONFIG = OCRConfig(
     service_id=None,
     timeout=30.0,
 )
+
+# 票据卡证识别配置
+TICKET_OCR_CONFIG = OCRConfig(
+    service_name="ticket_ocr",
+    base_url="https://cn-huadong-1.xf-yun.com/v1/inv",
+    auth_type="hmac_sha256",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
+
+# 名片识别配置
+BUSINESS_CARD_CONFIG = OCRConfig(
+    service_name="business_card",
+    base_url="http://webapi.xfyun.cn/v1/service/v1/ocr/business_card",
+    auth_type="md5",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
+
+# 身份证识别配置
+ID_CARD_CONFIG = OCRConfig(
+    service_name="id_card",
+    base_url="http://webapi.xfyun.cn/v1/service/v1/ocr/idcard",
+    auth_type="md5",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
+
+# 银行卡识别配置
+BANK_CARD_CONFIG = OCRConfig(
+    service_name="bank_card",
+    base_url="http://webapi.xfyun.cn/v1/service/v1/ocr/bankcard",
+    auth_type="md5",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
+
+# 营业执照识别配置
+BUSINESS_LICENSE_CONFIG = OCRConfig(
+    service_name="business_license",
+    base_url="http://webapi.xfyun.cn/v1/service/v1/ocr/business_license",
+    auth_type="md5",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
+
+# 增值税发票识别配置
+VAT_INVOICE_CONFIG = OCRConfig(
+    service_name="vat_invoice",
+    base_url="http://webapi.xfyun.cn/v1/service/v1/ocr/invoice",
+    auth_type="md5",
+    request_mode="sync",
+    service_id=None,
+    timeout=30.0,
+)
