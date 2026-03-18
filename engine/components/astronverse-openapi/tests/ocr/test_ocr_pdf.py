@@ -1,0 +1,18 @@
+from unittest.mock import patch
+import pytest
+from astronverse.openapi.ocr.pdf import ocr_pdf
+
+
+@patch("astronverse.openapi.ocr.pdf.GatewayClient.post")
+def test_ocr_pdf_with_url(mock_post):
+    mock_post.return_value = {
+        "payload": {"task_no": "T001", "status": "done", "page_count": 5, "result_url": "http://x.com/r"}
+    }
+    result = ocr_pdf(pdf_url="http://example.com/test.pdf")
+    assert result["task_no"] == "T001"
+    assert result["page_count"] == 5
+
+
+def test_ocr_pdf_raises_when_no_input():
+    with pytest.raises(Exception):
+        ocr_pdf()
