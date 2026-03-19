@@ -1,0 +1,49 @@
+atomic:
+  TranslatorAI.translate_text:
+    title: 文本翻译
+    comment: 调用 OpenAI 兼容接口，将 @{source_text} 翻译为 @{target_language} 。
+    icon: single-chat
+    helpManual: ''
+    inputList:
+      - key: base_url
+        title: OpenAI Base URL
+        tip: 填写 OpenAI 兼容接口的基础地址，例如 https://api.openai.com/v1 。
+      - key: api_key
+        title: API Key
+        tip: 填写 OpenAI 兼容接口的访问密钥。
+      - key: model
+        title: 模型ID
+        tip: 填写该 OpenAI 兼容接口支持的模型ID。
+      - key: target_language
+        title: 目标语言
+        tip: 请选择要翻译到的目标语言，仅支持预置的前10大语言。
+      - key: source_text
+        title: 待翻译文本
+        tip: 输入或传入需要翻译的原始文本。
+    outputList:
+      - key: translated_text
+        title: 翻译结果
+        subTitle: AI生成
+        tip: 输出译文文本。
+options:
+  TargetLanguageTypes:
+    - value: chinese
+      label: 中文
+    - value: english
+      label: 英语
+    - value: hindi
+      label: 印地语
+    - value: spanish
+      label: 西班牙语
+    - value: french
+      label: 法语
+    - value: arabic
+      label: 阿拉伯语
+    - value: bengali
+      label: 孟加拉语
+    - value: portuguese
+      label: 葡萄牙语
+    - value: russian
+      label: 俄语
+    - value: urdu
+      label: 乌尔都语

@@ -472,6 +472,9 @@ requires-dist = [
     { name = "requests" },
 ]
 
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3.5" }]
+
 [[package]]
 name = "astronverse-pdf"
 version = "1.0.1"
@@ -683,6 +686,21 @@ requires-dist = [
     { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "pyzipper" },
     { name = "send2trash" },
+]
+
+[[package]]
+name = "astronverse-translate"
+version = "1.0.0"
+source = { editable = "components/astronverse-translate" }
+dependencies = [
+    { name = "astronverse-actionlib" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "astronverse-actionlib", editable = "shared/astronverse-actionlib" },
+    { name = "requests" },
 ]
 
 [[package]]
@@ -1273,6 +1291,7 @@ dependencies = [
     { name = "astronverse-smart" },
     { name = "astronverse-software" },
     { name = "astronverse-system" },
+    { name = "astronverse-translate" },
     { name = "astronverse-trigger" },
     { name = "astronverse-verifycode" },
     { name = "astronverse-vision" },
@@ -1321,6 +1340,7 @@ requires-dist = [
     { name = "astronverse-smart", editable = "components/astronverse-smart" },
     { name = "astronverse-software", editable = "components/astronverse-software" },
     { name = "astronverse-system", editable = "components/astronverse-system" },
+    { name = "astronverse-translate", editable = "components/astronverse-translate" },
     { name = "astronverse-trigger", editable = "servers/astronverse-trigger" },
     { name = "astronverse-verifycode", editable = "components/astronverse-verifycode" },
     { name = "astronverse-vision", editable = "components/astronverse-vision" },

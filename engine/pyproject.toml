@@ -38,6 +38,7 @@ dependencies = [
     "astronverse-smart",
     "astronverse-software",
     "astronverse-system",
+    "astronverse-translate",
     "astronverse-verifycode",
     "astronverse-vision",
     "astronverse-window",
@@ -81,6 +82,7 @@ astronverse-script = {path = "./components/astronverse-script", editable = true}
 astronverse-smart = {path = "./components/astronverse-smart", editable = true}
 astronverse-software = {path = "./components/astronverse-software", editable = true}
 astronverse-system = {path = "./components/astronverse-system", editable = true}
+astronverse-translate = {path = "./components/astronverse-translate", editable = true}
 astronverse-verifycode = {path = "./components/astronverse-verifycode", editable = true}
 astronverse-vision = {path = "./components/astronverse-vision", editable = true}
 astronverse-window = {path = "./components/astronverse-window", editable = true}
