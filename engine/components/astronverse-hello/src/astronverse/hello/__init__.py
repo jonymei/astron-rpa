@@ -1,3 +1,7 @@
-from astronverse.hello.hello import Hello
+from enum import Enum
 
-__all__ = ["Hello"]
+
+class ReportLevelType(Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
