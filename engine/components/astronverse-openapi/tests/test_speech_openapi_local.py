@@ -9,7 +9,7 @@ import requests
 
 from astronverse.actionlib.atomic import atomicMg
 from astronverse.openapi.client import GatewayClient
-from astronverse.openapi.openapi import OpenApi
+from astronverse.openapi import speech_asr_zh, speech_asr_multilingual, speech_tts_ultra_human
 
 
 RUN_LOCAL_TESTS = os.getenv("RUN_LOCAL_OPENAPI_TESTS") == "1"
@@ -76,7 +76,7 @@ def _assert_text_has_overlap(actual: str, expected: str, minimum_common_chars: i
 
 
 def test_local_openapi_speech_asr_zh_roundtrip(tmp_path):
-    tts_result = OpenApi.speech_tts_ultra_human(
+    tts_result = speech_tts_ultra_human(
         text=ZH_TEXT,
         voice=TTS_VOICE,
         speed=35,
@@ -88,7 +88,7 @@ def test_local_openapi_speech_asr_zh_roundtrip(tmp_path):
     assert audio_path.exists()
     assert audio_path.stat().st_size > 0
 
-    asr_result = OpenApi.speech_asr_zh(
+    asr_result = speech_asr_zh(
         src_file=str(audio_path),
         is_save=True,
         dst_file=str(tmp_path),
@@ -102,7 +102,7 @@ def test_local_openapi_speech_asr_zh_roundtrip(tmp_path):
 
 
 def test_local_openapi_speech_asr_multilingual_roundtrip(tmp_path):
-    tts_result = OpenApi.speech_tts_ultra_human(
+    tts_result = speech_tts_ultra_human(
         text=EN_TEXT,
         voice=TTS_VOICE,
         speed=30,
@@ -114,7 +114,7 @@ def test_local_openapi_speech_asr_multilingual_roundtrip(tmp_path):
     assert audio_path.exists()
     assert audio_path.stat().st_size > 0
 
-    asr_result = OpenApi.speech_asr_multilingual(
+    asr_result = speech_asr_multilingual(
         src_file=str(audio_path),
         language="en",
         is_save=True,

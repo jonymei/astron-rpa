@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from astronverse.actionlib.atomic import atomicMg
-from astronverse.openapi.openapi import OpenApi
+from astronverse.openapi import speech_asr_zh, speech_asr_multilingual, speech_tts_ultra_human
 
 
 RUN_GATEWAY_TESTS = os.getenv("RUN_GATEWAY_TESTS") == "1"
@@ -44,7 +44,7 @@ def _normalize(text: str) -> str:
 
 def test_gateway_tts(tmp_path):
     """TTS 通过网关返回有效音频文件"""
-    result = OpenApi.speech_tts_ultra_human(
+    result = speech_tts_ultra_human(
         text=ZH_TEXT,
         voice=TTS_VOICE,
         speed=50,
@@ -62,7 +62,7 @@ def test_gateway_tts(tmp_path):
 
 def test_gateway_tts_asr_roundtrip(tmp_path):
     """TTS 生成音频后，ASR 能识别出与原文有重叠的文字"""
-    tts_result = OpenApi.speech_tts_ultra_human(
+    tts_result = speech_tts_ultra_human(
         text=ZH_TEXT,
         voice=TTS_VOICE,
         speed=35,
@@ -74,7 +74,7 @@ def test_gateway_tts_asr_roundtrip(tmp_path):
     assert audio_path.exists()
     assert audio_path.stat().st_size > 0
 
-    asr_result = OpenApi.speech_asr_zh(
+    asr_result = speech_asr_zh(
         src_file=str(audio_path),
         is_save=True,
         dst_file=str(tmp_path),
