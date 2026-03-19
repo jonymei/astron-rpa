@@ -21,4 +21,4 @@ def test_taxi_ticket_alias(mock_post):
             result = taxi_ticket(src_file="/fake/taxi.jpg", is_save=False)
     assert len(result) == 1
     call_args = mock_post.call_args
-    assert call_args.args[3]["ocr_type"] == "taxi_ticket"
+    assert call_args.args[3]["ocr_type"] == "taxi_receipt"

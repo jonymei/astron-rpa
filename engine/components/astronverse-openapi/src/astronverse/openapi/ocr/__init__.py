@@ -37,7 +37,7 @@ def taxi_ticket(
     dst_file_name: str = "taxi_ticket_ocr",
 ) -> list:
     return ocr_ticket(
-        ticket_type="taxi_ticket",
+        ticket_type="taxi_receipt",
         is_multi=is_multi,
         src_file=src_file,
         src_dir=src_dir,
