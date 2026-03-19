@@ -14,7 +14,16 @@ Inspect these files to confirm the expected package shape:
 - `engine/components/astronverse-hello/meta.py`
 - `engine/components/astronverse-hello/config.yaml`
 
-Use this only as a starting skeleton. Before finalizing, validate the design against production components with similar behavior.
+`astronverse-hello` is the official recommended minimal template for new components.
+
+Use it for:
+
+- new component directory layout
+- minimal `meta.py`
+- minimal `config.yaml`
+- minimal test shape
+
+Before finalizing, still validate the design against production components with similar behavior when the component needs richer forms, type metadata, or internal service access.
 
 ### Reusable object outputs and type metadata
 

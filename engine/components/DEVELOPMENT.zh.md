@@ -11,7 +11,7 @@
 - 仓库内后端服务访问方式
 - 验证与文档更新
 
-如果你只需要最短路径跑通一个组件，请先看[10 分钟上手指南](README.zh.md)。
+如果你只需要最短路径跑通一个组件，请先看[10 分钟上手指南](README.zh.md)。`astronverse-hello` 是当前官方推荐的最小组件模板。
 
 ## 1. 先从最小拥有者包开始
 
@@ -51,7 +51,7 @@ engine/components/astronverse-your-component/
 
 常用参考分组：
 
-- 最小骨架：[`astronverse-hello/`](./astronverse-hello/)
+- 官方最小模板：[`astronverse-hello/`](./astronverse-hello/)
 - 可复用对象输出：[`astronverse-browser/`](./astronverse-browser/)、[`astronverse-excel/`](./astronverse-excel/)、[`astronverse-word/`](./astronverse-word/)
 - 丰富表单与动态字段：[`astronverse-word/`](./astronverse-word/)、[`astronverse-excel/`](./astronverse-excel/)、[`astronverse-encrypt/`](./astronverse-encrypt/)、[`astronverse-email/`](./astronverse-email/)、[`astronverse-vision/`](./astronverse-vision/)
 - 通过本地网关访问仓库内后端能力：[`astronverse-ai/`](./astronverse-ai/)、[`astronverse-openapi/`](./astronverse-openapi/)
@@ -62,6 +62,8 @@ engine/components/astronverse-your-component/
 - 用户看到的表单形态是否同类
 - 输出变量行为是否同类
 - 是否依赖本地网关转发
+
+默认先从 `astronverse-hello` 起步；只有目标组件需要更丰富的能力时，再借鉴更复杂的生产组件模式。
 
 ## 3. 先实现运行时能力
 
@@ -98,7 +100,26 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 所以改表单时，不要只看源码，要看生成后的 `meta.json`。
 
-## 5. 尽量落在现有表单类型里
+## 5. 已上线流程必须保持向后兼容
+
+一旦某个原子能力可能已经被已上线流程使用，就要把它当成兼容性契约来维护。
+
+禁止做这些不兼容改动：
+
+- 重命名已有参数
+- 删除已有参数
+- 不兼容地修改已有参数类型
+- 不兼容地改变已有参数语义
+
+允许的演进方式只有：
+
+- 新增一个带安全默认值的参数
+- 新增一个 `v2` 方法
+- 新增一个原子节点或新能力承接不兼容行为
+
+如果确实需要不兼容变更，保留旧原子，新增后继版本，而不是直接改坏旧能力。
+
+## 6. 尽量落在现有表单类型里
 
 大多数组件开发都应该复用现有表单语义，而不是新增一套。
 
@@ -135,7 +156,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 这时要明确说明：该改动还需要前端适配。
 
-## 6. 输出要复用的对象时，补齐类型注册
+## 7. 输出要复用的对象时，补齐类型注册
 
 有些组件输出的不只是标量，而是后续节点还要继续引用的对象。
 
@@ -155,7 +176,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 这几块少一块，后续变量流转就可能退化或出错。
 
-## 7. 访问仓库内后端能力时走本地网关
+## 8. 访问仓库内后端能力时走本地网关
 
 如果组件依赖的是仓库内后端服务能力，组件侧应当走本地路由或网关链路，而不是直接请求后端服务 Endpoint。
 
@@ -178,7 +199,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 
 如果当前没有合适的本地网关或代理链路，就把任务视为 `engine + backend` 的联动工作，而不是在组件里临时直连。
 
-## 8. 新组件要接入 engine workspace
+## 9. 新组件要接入 engine workspace
 
 仅仅创建目录还不够。新增组件包时，还要修改 [`engine/pyproject.toml`](../pyproject.toml)：
 
@@ -187,7 +208,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 
 否则 `uv run --project engine ...` 无法正确识别这个包。
 
-## 9. 生成元数据并做聚焦验证
+## 10. 生成元数据并做聚焦验证
 
 至少验证这些内容：
 
@@ -196,6 +217,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 3. 如果输出可复用对象，类型元数据也被正确生成
 4. 本地测试通过
 5. 新包已经接入 workspace
+6. 已上线流程依赖的旧原子仍然保持兼容，或者不兼容能力已通过新版本承接
 
 常用命令：
 
@@ -206,18 +228,21 @@ uv run --project engine python -m unittest engine/components/<component-name>/te
 
 只在确有必要时再扩大验证范围。
 
-## 10. 合并前检查清单
+## 11. 合并前检查清单
 
+- 是否以 `astronverse-hello` 作为默认起点，除非任务明确需要更复杂模式
 - 是否优先复用了最接近的生产组件模式，而不是重新发明一套
 - 用户层文案是否主要放在 `config.yaml`
 - 是否检查了生成后的 `meta.json`
+- 是否保持了已上线流程的向后兼容
+- 如果必须做不兼容行为，是否通过默认值新参数、`v2` 方法或新原子承接
 - 是否落在现有表单类型里
 - 如果没有，是否明确指出还需要前端适配
 - 如果输出可复用对象，是否补了类型注册和类型元数据
 - 如果访问仓库内后端能力，是否走了本地网关或代理
 - 是否执行了聚焦测试和元数据生成
 
-## 11. 与项目 Skill 的关系
+## 12. 与项目 Skill 的关系
 
 项目 Skill 位于 [`.agents/skills/component-development/`](../../.agents/skills/component-development/)，它是给 Codex 用的压缩操作规程。这份文档才是面向人的长期参考手册。
 

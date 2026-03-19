@@ -34,6 +34,25 @@ Use `inputList` to define designer-facing inputs. Stable fields commonly include
 
 Use `outputList` to define outputs that become downstream variables. For normal outputs, the designer expects `RESULT` form behavior. For reusable object outputs, also add type metadata registration.
 
+## Backward Compatibility Rule
+
+Treat any atom that may already be used by shipped flows as a stable contract.
+
+Do not:
+
+- rename an existing parameter
+- delete an existing parameter
+- change an existing parameter type incompatibly
+- change the meaning of an existing parameter incompatibly
+
+Allowed compatible changes:
+
+- add a new parameter with a safe default value
+- add a new `v2` method
+- add a new atom or node for the incompatible behavior
+
+If you need an incompatible change, preserve the old atom and introduce a successor instead.
+
 ## Existing Form Types
 
 Prefer existing supported form types such as:

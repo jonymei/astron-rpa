@@ -3,7 +3,7 @@ English | [简体中文](README.zh.md)
 
 This guide focuses on one thing: getting a runnable, testable component in this repository that can generate `meta.json`.
 
-If you want a real minimal example, start with [`astronverse-hello/`](./astronverse-hello/).
+If you want the official recommended minimal template, start with [`astronverse-hello/`](./astronverse-hello/).
 If you need the full reference for form contracts, type metadata, gateway-backed components, and validation, read the [component development reference](./DEVELOPMENT.md).
 
 ## 1. Prepare the Environment
@@ -102,7 +102,7 @@ uv run --project engine python -m unittest engine/components/astronverse-hello/t
 
 ## 7. Copy This Template for Your Own Component
 
-The fastest path is:
+`astronverse-hello` is the official recommended minimal template. The fastest path is:
 
 1. Copy `engine/components/astronverse-hello/`
 2. Rename the directory to `astronverse-your-component`
@@ -117,6 +117,14 @@ In the current repository conventions, yes. `meta.py` exports `meta.json`.
 ### Do I need frontend work first?
 
 Not for the minimal path. First make the Python component, tests, and `meta.json` work. Then evaluate whether the designer side needs anything else.
+
+### Can I change parameters of an atom that is already used by shipped flows?
+
+Do not make incompatible parameter changes on shipped atoms. Keep existing names, types, and semantics stable. The only compatible evolution paths are:
+
+- add a new parameter with a default value
+- add a new `v2` method
+- add a new atom or node for incompatible behavior
 
 ## Next
 

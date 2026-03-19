@@ -26,8 +26,22 @@ When changing forms:
 2. Confirm `options` values and labels match runtime expectations.
 3. Confirm `dynamics` hide and show the correct fields.
 4. Confirm required fields still behave correctly when hidden or revealed.
+5. Confirm existing atom parameters remain backward-compatible for shipped flows.
 
 If the request needs a new form type or new renderer semantics, do not mark the task complete as engine-only. Call out frontend adaptation explicitly.
+
+## Backward Compatibility Checks
+
+For any existing atom that may already be used by shipped flows:
+
+1. Confirm no parameter was renamed.
+2. Confirm no parameter was deleted.
+3. Confirm no parameter type was changed incompatibly.
+4. Confirm no existing parameter changed meaning incompatibly.
+5. If incompatible behavior is required, confirm the change was carried by:
+   - a new parameter with a default value, or
+   - a new `v2` method, or
+   - a new atom or node
 
 ## Internal Service Checks
 

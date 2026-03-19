@@ -11,7 +11,7 @@ Use it when the 10-minute guide is no longer enough and you need to make decisio
 - access to repository-owned backend services
 - validation and documentation updates
 
-If you only need the shortest runnable path, start with the [10-minute guide](README.md).
+If you only need the shortest runnable path, start with the [10-minute guide](README.md). `astronverse-hello` is the official recommended minimal template for new components.
 
 ## 1. Start From the Smallest Owning Package
 
@@ -51,7 +51,7 @@ Prefer production components with the closest behavior. One primary reference an
 
 Useful reference groups:
 
-- Minimal layout: [`astronverse-hello/`](./astronverse-hello/)
+- Official minimal template: [`astronverse-hello/`](./astronverse-hello/)
 - Typed object outputs: [`astronverse-browser/`](./astronverse-browser/), [`astronverse-excel/`](./astronverse-excel/), [`astronverse-word/`](./astronverse-word/)
 - Rich form metadata and dynamic fields: [`astronverse-word/`](./astronverse-word/), [`astronverse-excel/`](./astronverse-excel/), [`astronverse-encrypt/`](./astronverse-encrypt/), [`astronverse-email/`](./astronverse-email/), [`astronverse-vision/`](./astronverse-vision/)
 - Internal service access through the local gateway: [`astronverse-ai/`](./astronverse-ai/), [`astronverse-openapi/`](./astronverse-openapi/)
@@ -62,6 +62,8 @@ Compare references by:
 - user-facing form shape
 - output variable behavior
 - dependency on local gateway routing
+
+Start from `astronverse-hello` by default, then borrow richer patterns only when the target component needs them.
 
 ## 3. Implement the Runtime Capability First
 
@@ -98,7 +100,26 @@ The practical model is:
 
 When changing forms, review the generated `meta.json`, not just the source files.
 
-## 5. Stay Within Existing Form Types When Possible
+## 5. Preserve Backward Compatibility For Shipped Flows
+
+Treat existing atoms as backward-compatible contracts once they may be used by shipped flows.
+
+Do not make incompatible parameter changes such as:
+
+- renaming an existing parameter
+- deleting an existing parameter
+- changing an existing parameter type incompatibly
+- changing the semantics of an existing parameter incompatibly
+
+Allowed evolution paths:
+
+- add a new parameter with a safe default value
+- add a new `v2` method
+- add a new atom or node to carry the incompatible behavior
+
+If an incompatible change is required, preserve the existing atom and introduce a successor instead.
+
+## 6. Stay Within Existing Form Types When Possible
 
 Most component work should reuse current form semantics instead of introducing new ones.
 
@@ -135,7 +156,7 @@ The task is no longer engine-only if any of these are true:
 
 In those cases, state explicitly that the change also needs frontend work.
 
-## 6. Register Reusable Object Types When Outputs Are Meant to Be Reused
+## 7. Register Reusable Object Types When Outputs Are Meant to Be Reused
 
 Some components do not just return scalar values. They return objects that downstream nodes should be able to reference as typed variables.
 
@@ -155,7 +176,7 @@ See:
 
 If any of these pieces is missing, downstream variable handling can degrade or fail.
 
-## 7. Use the Local Gateway for Repository-Owned Backend Services
+## 8. Use the Local Gateway for Repository-Owned Backend Services
 
 When a component needs a repository-owned backend capability, the component should call a local route or gateway path rather than directly targeting a backend service endpoint.
 
@@ -178,7 +199,7 @@ Rules:
 
 If no local gateway or proxy route exists for the required capability, treat the work as coordinated engine and backend work rather than solving it with a one-off direct call.
 
-## 8. Wire New Components Into the Engine Workspace
+## 9. Wire New Components Into the Engine Workspace
 
 Creating a component directory is not enough. For a new package, also update [`engine/pyproject.toml`](../pyproject.toml):
 
@@ -187,7 +208,7 @@ Creating a component directory is not enough. For a new package, also update [`e
 
 Without that step, `uv run --project engine ...` will not see the package correctly.
 
-## 9. Generate Metadata and Run Focused Validation
+## 10. Generate Metadata and Run Focused Validation
 
 At minimum, verify:
 
@@ -196,6 +217,7 @@ At minimum, verify:
 3. type metadata is generated when the component emits reusable objects
 4. local tests pass
 5. new packages are wired into the workspace
+6. existing shipped atoms remain backward-compatible, or incompatible work is carried by a versioned successor
 
 Typical commands:
 
@@ -206,18 +228,21 @@ uv run --project engine python -m unittest engine/components/<component-name>/te
 
 Use narrower or broader checks only as needed by the package you touched.
 
-## 10. Review Checklist Before Merging
+## 11. Review Checklist Before Merging
 
+- Did you start from `astronverse-hello` unless the task clearly needed a richer pattern?
 - Did you copy the closest production pattern instead of inventing a new one?
 - Did you keep user-facing wording in `config.yaml`?
 - Did you confirm the generated `meta.json`, not just the source config?
+- Did you preserve backward compatibility for shipped flows?
+- If incompatible behavior was required, did you carry it via a defaulted new parameter, a `v2` method, or a new atom?
 - Did you stay within existing form types?
 - If not, did you call out frontend adaptation explicitly?
 - If the component outputs a reusable object, did you add type registration and type metadata?
 - If the component calls a repository-owned backend capability, did you route through the local gateway or proxy?
 - Did you run focused tests and metadata generation?
 
-## 11. Relationship to the Project Skill
+## 12. Relationship to the Project Skill
 
 The project skill at [`.agents/skills/component-development/`](../../.agents/skills/component-development/) is a condensed operating guide for Codex. This document is the human-maintained reference that the skill should follow.
 

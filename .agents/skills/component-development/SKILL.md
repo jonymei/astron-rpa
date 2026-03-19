@@ -7,7 +7,7 @@ description: Build or extend components under `engine/components` in this reposi
 
 ## Overview
 
-Build component changes from existing production patterns, not from a blank-slate design. Treat the stable contract as the combination of Python atomic definitions, `config.yaml` overrides, generated `meta.json`, optional type metadata, and the current designer form pipeline.
+Build component changes from existing production patterns, not from a blank-slate design. Treat the stable contract as the combination of Python atomic definitions, `config.yaml` overrides, generated `meta.json`, optional type metadata, and the current designer form pipeline. `engine/components/astronverse-hello/` is the official recommended minimal template for new components.
 
 Read only the reference file you need:
 
@@ -26,6 +26,7 @@ Read only the reference file you need:
    - Component that depends on an internal backend service
    - Component request that cannot fit existing form types and may require frontend adaptation
 3. Find the closest production component pattern before writing code.
+   - Use `astronverse-hello` as the default minimal template unless the task clearly needs a richer pattern.
 4. Reuse existing form types whenever they already express the requested UX.
 5. Add or update Python implementation, `config.yaml`, `meta.py`, tests, and `engine/pyproject.toml` in the narrowest scope necessary.
 6. Generate metadata and run the smallest relevant verification set before claiming completion.
@@ -49,13 +50,25 @@ Read only the reference file you need:
 - If the component outputs a reusable object such as a browser, document, or spreadsheet handle, add type registration and type metadata in addition to the normal component metadata.
 - Keep type naming and registration aligned with existing variable-selection behavior rather than inventing parallel abstractions.
 
+### Backward Compatibility For Shipped Flows
+
+- Treat existing atoms as backward-compatible contracts once they may already be used by shipped flows.
+- Do not rename parameters, delete parameters, change parameter types incompatibly, or change existing parameter semantics incompatibly.
+- Compatible evolution is limited to:
+  - adding a new parameter with a safe default value
+  - adding a new `v2` method
+  - adding a new atom or node for the incompatible behavior
+- If the request requires incompatible behavior, preserve the old atom and introduce a versioned successor instead.
+
 ## Implementation Rules
 
 - Treat `config.yaml` as the user-facing contract layer. Titles, tips, comments, option labels, default values, and dynamic visibility belong there unless the atomic library requires them in Python metadata.
 - Keep Python implementations focused on runtime behavior. Keep designer wording and option presentation in configuration.
 - Follow the nearest production component layout before introducing new files or helper modules.
+- Use `engine/components/astronverse-hello/` as the official minimal starting point for new components, then layer richer patterns only when required.
 - If you need a component to call an internal service, inspect current local gateway usage and reuse that structure.
 - Do not assume the minimal example component reflects every production requirement. Verify against real shipped components before finalizing structure or field usage.
+- Preserve backward compatibility for shipped flows unless the work explicitly introduces a new versioned atom.
 
 ## Output Requirements
 
@@ -65,4 +78,5 @@ When you finish a task with this skill, report:
 - Whether the form contract stayed within existing form types
 - Whether the change required or still requires frontend adaptation
 - Whether the component uses local proxy routing for internal services
+- Whether the change preserved backward compatibility or introduced a versioned successor
 - Which metadata generation and tests you ran

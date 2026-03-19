@@ -12,22 +12,27 @@ Use this checklist when implementing or extending a component under `engine/comp
    - `config.yaml`
    - `src/...`
    - nearby tests
-2. Pick one or two production components with the closest behavior and form contract.
-3. Decide whether the task needs:
+2. Start from `engine/components/astronverse-hello/` for the minimum skeleton unless a richer pattern is clearly required.
+3. Pick one or two production components with the closest behavior and form contract.
+4. Decide whether the task needs:
    - only Python atomics and `config.yaml`
    - type registration via `config_type.yaml` and `typesMg.register_types(...)`
    - local gateway or proxy access to repository-owned backend services
    - frontend adaptation because the requested form behavior is not already supported
-4. Implement runtime behavior in Python first.
-5. Update `config.yaml` so titles, tips, options, defaults, and comments match the intended designer UX.
-6. Update `meta.py`:
+5. Check backward compatibility before editing an existing atom:
+   - keep existing parameter names, types, and semantics stable for shipped flows
+   - only add new parameters if they have safe defaults
+   - introduce a `v2` method or a new atom for incompatible behavior
+6. Implement runtime behavior in Python first.
+7. Update `config.yaml` so titles, tips, options, defaults, and comments match the intended designer UX.
+8. Update `meta.py`:
    - register atomics
    - generate `meta.json`
    - register type metadata when the component emits reusable object outputs
-7. Add the package to `engine/pyproject.toml` if this is a new component package.
-8. Regenerate metadata.
-9. Run targeted tests.
-10. Review the generated metadata before declaring success.
+9. Add the package to `engine/pyproject.toml` if this is a new component package.
+10. Regenerate metadata.
+11. Run targeted tests.
+12. Review the generated metadata before declaring success.
 
 ## Classification Heuristics
 
@@ -42,6 +47,10 @@ Expected files:
 - `pyproject.toml`
 - source package under `src/`
 - tests
+
+Default template:
+
+- `engine/components/astronverse-hello/`
 
 ### Object-producing component
 
@@ -77,9 +86,10 @@ Additional work:
 
 Use this priority when deciding what to trust:
 
-1. Current production components with similar behavior
-2. Current designer metadata consumers and serialization pipeline
-3. Recent minimal examples and docs
+1. `astronverse-hello` for the official minimum component template
+2. Current production components with similar behavior
+3. Current designer metadata consumers and serialization pipeline
+4. Recent docs
 
 ## Minimal Commands
 

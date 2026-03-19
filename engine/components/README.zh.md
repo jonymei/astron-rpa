@@ -3,7 +3,7 @@
 
 这份文档只解决一件事：让你在当前仓库里快速做出一个可运行、可测试、可生成 `meta.json` 的组件。
 
-如果你想看一个真实最小示例，直接看 [`astronverse-hello/`](./astronverse-hello/)。
+如果你想看当前官方推荐的最小模板，直接看 [`astronverse-hello/`](./astronverse-hello/)。
 如果你需要完整的组件开发参考，包括表单契约、类型元数据、网关代理和验证清单，请阅读[组件开发参考手册](./DEVELOPMENT.zh.md)。
 
 ## 1. 准备环境
@@ -102,7 +102,7 @@ uv run --project engine python -m unittest engine/components/astronverse-hello/t
 
 ## 7. 复制这个模板开发你自己的组件
 
-最直接的方式就是：
+`astronverse-hello` 是当前官方推荐的最小模板。最直接的方式就是：
 
 1. 复制 `engine/components/astronverse-hello/`
 2. 将目录名改成 `astronverse-你的组件名`
@@ -117,6 +117,14 @@ uv run --project engine python -m unittest engine/components/astronverse-hello/t
 ### 我需要先写前端配置吗？
 
 这个最小路径不需要。先让 Python 组件、测试和 `meta.json` 跑通，再看设计器侧是否还要补额外配置。
+
+### 已上线流程正在用的原子，能直接改参数吗？
+
+不要对已上线流程正在使用的原子做不兼容改参。已有参数名、类型和语义都要保持稳定。允许的演进方式只有：
+
+- 增加一个带默认值的新参数
+- 新增一个 `v2` 方法
+- 新增一个原子节点或能力承接不兼容行为
 
 ## 下一步
 
