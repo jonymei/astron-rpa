@@ -22,6 +22,7 @@
 - `pyproject.toml`
 - `meta.py`
 - `config.yaml`
+- `error.py`
 - `src/` 下源码
 - 本地测试
 
@@ -30,6 +31,7 @@
 ```text
 engine/components/astronverse-your-component/
 ├── config.yaml
+├── error.py
 ├── meta.py
 ├── pyproject.toml
 ├── src/astronverse/your_component/
@@ -77,7 +79,31 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 用户能看到的标题、标签、提示、默认值、选项展示，优先放在配置层，而不是散落在运行时代码里，除非 atomic 库本身要求放在代码中。
 
-## 4. 把 `config.yaml` 当作设计器契约层
+## 4. 在 `error.py` 中定义组件异常
+
+每个组件都应当有自己的 `error.py`，作为该组件的异常定义入口。
+
+建议沿用 `astronverse-hello` 和现有生产组件的模式：
+
+- 引入 `BizCode`、`ErrorCode` 和 baseline 的 `BaseException`
+- 在组件自己的 `error.py` 里重新导出 `BaseException`
+- 在这里定义组件域内的 `ErrorCode` 常量
+- 用户可见文案通过 `_()` 做翻译
+
+推荐分层：
+
+- `core.py` 或等价模块负责运行时实现
+- `error.py` 负责组件异常定义
+- 原子暴露层负责把运行时失败映射为组件域异常
+
+抛出组件异常时，建议保持：
+
+- 第一个参数是来自组件 `ErrorCode` 的、面向用户的翻译文案
+- 第二个参数是面向开发者日志的细节信息
+
+不要把组件域错误文案零散写成 runtime 代码里的字面量。
+
+## 5. 把 `config.yaml` 当作设计器契约层
 
 `config.yaml` 是组件在设计器侧的主要用户契约。只要是“这个组件在设计器里怎么显示”，优先先看这里。
 
@@ -100,7 +126,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 所以改表单时，不要只看源码，要看生成后的 `meta.json`。
 
-## 5. 已上线流程必须保持向后兼容
+## 6. 已上线流程必须保持向后兼容
 
 一旦某个原子能力可能已经被已上线流程使用，就要把它当成兼容性契约来维护。
 
@@ -119,7 +145,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 如果确实需要不兼容变更，保留旧原子，新增后继版本，而不是直接改坏旧能力。
 
-## 6. 尽量落在现有表单类型里
+## 7. 尽量落在现有表单类型里
 
 大多数组件开发都应该复用现有表单语义，而不是新增一套。
 
@@ -156,7 +182,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 这时要明确说明：该改动还需要前端适配。
 
-## 7. 输出要复用的对象时，补齐类型注册
+## 8. 输出要复用的对象时，补齐类型注册
 
 有些组件输出的不只是标量，而是后续节点还要继续引用的对象。
 
@@ -176,7 +202,7 @@ Python 代码负责运行时行为。通过 `@atomicMg.atomic(...)` 暴露设计
 
 这几块少一块，后续变量流转就可能退化或出错。
 
-## 8. 访问仓库内后端能力时走本地网关
+## 9. 访问仓库内后端能力时走本地网关
 
 如果组件依赖的是仓库内后端服务能力，组件侧应当走本地路由或网关链路，而不是直接请求后端服务 Endpoint。
 
@@ -199,7 +225,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 
 如果当前没有合适的本地网关或代理链路，就把任务视为 `engine + backend` 的联动工作，而不是在组件里临时直连。
 
-## 9. 新组件要接入 engine workspace
+## 10. 新组件要接入 engine workspace
 
 仅仅创建目录还不够。新增组件包时，还要修改 [`engine/pyproject.toml`](../pyproject.toml)：
 
@@ -208,7 +234,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 
 否则 `uv run --project engine ...` 无法正确识别这个包。
 
-## 10. 生成元数据并做聚焦验证
+## 11. 生成元数据并做聚焦验证
 
 至少验证这些内容：
 
@@ -218,6 +244,7 @@ http://127.0.0.1:{GATEWAY_PORT}/api/...
 4. 本地测试通过
 5. 新包已经接入 workspace
 6. 已上线流程依赖的旧原子仍然保持兼容，或者不兼容能力已通过新版本承接
+7. 组件域异常已在 `error.py` 中集中定义并被一致使用
 
 常用命令：
 
@@ -228,10 +255,12 @@ uv run --project engine python -m unittest engine/components/<component-name>/te
 
 只在确有必要时再扩大验证范围。
 
-## 11. 合并前检查清单
+## 12. 合并前检查清单
 
 - 是否以 `astronverse-hello` 作为默认起点，除非任务明确需要更复杂模式
 - 是否优先复用了最接近的生产组件模式，而不是重新发明一套
+- 是否在 `error.py` 里定义了组件域异常
+- 是否合理区分了用户可见错误信息和开发日志信息
 - 用户层文案是否主要放在 `config.yaml`
 - 是否检查了生成后的 `meta.json`
 - 是否保持了已上线流程的向后兼容
@@ -242,7 +271,7 @@ uv run --project engine python -m unittest engine/components/<component-name>/te
 - 如果访问仓库内后端能力，是否走了本地网关或代理
 - 是否执行了聚焦测试和元数据生成
 
-## 12. 与项目 Skill 的关系
+## 13. 与项目 Skill 的关系
 
 项目 Skill 位于 [`.agents/skills/component-development/`](../../.agents/skills/component-development/)，它是给 Codex 用的压缩操作规程。这份文档才是面向人的长期参考手册。
 

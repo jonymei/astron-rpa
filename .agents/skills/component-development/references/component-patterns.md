@@ -21,9 +21,16 @@ Use it for:
 - new component directory layout
 - minimal `meta.py`
 - minimal `config.yaml`
+- minimal `error.py`
 - minimal test shape
 
 Before finalizing, still validate the design against production components with similar behavior when the component needs richer forms, type metadata, or internal service access.
+
+The `astronverse-hello` package also shows the recommended minimum error-handling split:
+
+- `core.py` holds runtime implementation details
+- `error.py` defines component-domain `ErrorCode` constants and exposes `BaseException`
+- `hello.py` maps runtime failures into component exceptions
 
 ### Reusable object outputs and type metadata
 

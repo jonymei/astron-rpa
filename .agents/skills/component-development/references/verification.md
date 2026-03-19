@@ -10,6 +10,7 @@ Use this checklist before claiming a component change is complete.
 2. Confirm the generated `meta.json` reflects the intended titles, tips, defaults, options, and outputs.
 3. Run the smallest relevant automated tests.
 4. Confirm new components are wired into `engine/pyproject.toml` when applicable.
+5. Confirm component-domain errors are defined in `error.py` rather than scattered as literal messages.
 
 ## Type Metadata Checks
 
@@ -29,6 +30,15 @@ When changing forms:
 5. Confirm existing atom parameters remain backward-compatible for shipped flows.
 
 If the request needs a new form type or new renderer semantics, do not mark the task complete as engine-only. Call out frontend adaptation explicitly.
+
+## Error Handling Checks
+
+1. Confirm the component has a local `error.py`.
+2. Confirm user-facing error text comes from component `ErrorCode` constants rather than ad hoc literal strings.
+3. Confirm raised exceptions include:
+   - a translated user-facing message
+   - a developer-facing detail message when useful
+4. Confirm the atom layer maps core failures into component-domain exceptions.
 
 ## Backward Compatibility Checks
 

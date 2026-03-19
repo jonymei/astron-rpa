@@ -28,7 +28,7 @@ Read only the reference file you need:
 3. Find the closest production component pattern before writing code.
    - Use `astronverse-hello` as the default minimal template unless the task clearly needs a richer pattern.
 4. Reuse existing form types whenever they already express the requested UX.
-5. Add or update Python implementation, `config.yaml`, `meta.py`, tests, and `engine/pyproject.toml` in the narrowest scope necessary.
+5. Add or update Python implementation, component-local `error.py`, `config.yaml`, `meta.py`, tests, and `engine/pyproject.toml` in the narrowest scope necessary.
 6. Generate metadata and run the smallest relevant verification set before claiming completion.
 
 ## Decision Gates
@@ -60,10 +60,21 @@ Read only the reference file you need:
   - adding a new atom or node for the incompatible behavior
 - If the request requires incompatible behavior, preserve the old atom and introduce a versioned successor instead.
 
+### Component Error Handling
+
+- Give each component package its own `error.py`.
+- Define component-domain `ErrorCode` values in `error.py` using `BizCode`, `ErrorCode`, and `_`.
+- Re-export `BaseException` from the baseline error module so the rest of the component uses a consistent local import surface.
+- Raise component errors from the atom layer with:
+  - a translated user-facing message derived from the component `ErrorCode`
+  - a developer-facing detail string for logs
+- Keep runtime or platform details in `core.py` or helpers; keep the atom file responsible for mapping failures into component-domain exceptions.
+
 ## Implementation Rules
 
 - Treat `config.yaml` as the user-facing contract layer. Titles, tips, comments, option labels, default values, and dynamic visibility belong there unless the atomic library requires them in Python metadata.
 - Keep Python implementations focused on runtime behavior. Keep designer wording and option presentation in configuration.
+- Keep component-domain error constants in `error.py` instead of scattering literal exception text across runtime code.
 - Follow the nearest production component layout before introducing new files or helper modules.
 - Use `engine/components/astronverse-hello/` as the official minimal starting point for new components, then layer richer patterns only when required.
 - If you need a component to call an internal service, inspect current local gateway usage and reuse that structure.
@@ -79,4 +90,5 @@ When you finish a task with this skill, report:
 - Whether the change required or still requires frontend adaptation
 - Whether the component uses local proxy routing for internal services
 - Whether the change preserved backward compatibility or introduced a versioned successor
+- How component-domain errors were defined and raised
 - Which metadata generation and tests you ran

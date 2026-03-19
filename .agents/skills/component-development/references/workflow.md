@@ -10,12 +10,14 @@ Use this checklist when implementing or extending a component under `engine/comp
    - `pyproject.toml`
    - `meta.py`
    - `config.yaml`
+   - `error.py`
    - `src/...`
    - nearby tests
 2. Start from `engine/components/astronverse-hello/` for the minimum skeleton unless a richer pattern is clearly required.
 3. Pick one or two production components with the closest behavior and form contract.
 4. Decide whether the task needs:
    - only Python atomics and `config.yaml`
+   - component-local error codes in `error.py`
    - type registration via `config_type.yaml` and `typesMg.register_types(...)`
    - local gateway or proxy access to repository-owned backend services
    - frontend adaptation because the requested form behavior is not already supported
@@ -24,15 +26,16 @@ Use this checklist when implementing or extending a component under `engine/comp
    - only add new parameters if they have safe defaults
    - introduce a `v2` method or a new atom for incompatible behavior
 6. Implement runtime behavior in Python first.
-7. Update `config.yaml` so titles, tips, options, defaults, and comments match the intended designer UX.
-8. Update `meta.py`:
+7. Add or update `error.py` so component-domain errors are centralized and translated consistently.
+8. Update `config.yaml` so titles, tips, options, defaults, and comments match the intended designer UX.
+9. Update `meta.py`:
    - register atomics
    - generate `meta.json`
    - register type metadata when the component emits reusable object outputs
-9. Add the package to `engine/pyproject.toml` if this is a new component package.
-10. Regenerate metadata.
-11. Run targeted tests.
-12. Review the generated metadata before declaring success.
+10. Add the package to `engine/pyproject.toml` if this is a new component package.
+11. Regenerate metadata.
+12. Run targeted tests.
+13. Review the generated metadata before declaring success.
 
 ## Classification Heuristics
 
@@ -43,6 +46,7 @@ Use this path when the component has scalar inputs, standard file inputs, standa
 Expected files:
 
 - `config.yaml`
+- `error.py`
 - `meta.py`
 - `pyproject.toml`
 - source package under `src/`
