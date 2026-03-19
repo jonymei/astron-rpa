@@ -4,6 +4,7 @@
 这份文档只解决一件事：让你在当前仓库里快速做出一个可运行、可测试、可生成 `meta.json` 的组件。
 
 如果你想看一个真实最小示例，直接看 [`astronverse-hello/`](./astronverse-hello/)。
+如果你需要完整的组件开发参考，包括表单契约、类型元数据、网关代理和验证清单，请阅读[组件开发参考手册](./DEVELOPMENT.zh.md)。
 
 ## 1. 准备环境
 
@@ -120,4 +121,5 @@ uv run --project engine python -m unittest engine/components/astronverse-hello/t
 ## 下一步
 
 - 看示例组件：[`astronverse-hello/`](./astronverse-hello/)
+- 看完整参考手册：[`DEVELOPMENT.zh.md`](./DEVELOPMENT.zh.md)
 - 回到 `engine` 脚本文档：[`../README.zh.md`](../README.zh.md)

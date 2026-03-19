@@ -1,0 +1,4 @@
+interface:
+  display_name: "Component Development"
+  short_description: "Build Astron RPA engine components safely"
+  default_prompt: "Use $component-development to add or extend an engine component with correct form metadata."

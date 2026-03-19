@@ -3,7 +3,7 @@ English | [简体中文](README.zh.md)
 
 This project uses the `meta_json.py` script to automatically build, merge, and upload component meta configurations. The following are the instructions for use:
 
-If you want to build a new component instead of only running `meta_json.py`, start with the [10-minute component development guide](components/README.md).
+If you want to build a new component instead of only running `meta_json.py`, start with the [10-minute component development guide](components/README.md). For the full reference, see the [component development reference](components/DEVELOPMENT.md).
 
 ## Features
 

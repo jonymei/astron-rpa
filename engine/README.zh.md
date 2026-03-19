@@ -3,7 +3,7 @@
 
 本项目通过 `meta_json.py` 脚本实现组件 meta 配置的自动构建、合并与上传。以下为使用说明：
 
-如果你想开发新组件，而不是只运行 `meta_json.py`，请先阅读[组件开发 10 分钟上手指南](components/README.zh.md)。
+如果你想开发新组件，而不是只运行 `meta_json.py`，请先阅读[组件开发 10 分钟上手指南](components/README.zh.md)。如果需要完整参考，请继续阅读[组件开发参考手册](components/DEVELOPMENT.zh.md)。
 
 ## 功能简介
 

@@ -4,6 +4,7 @@ English | [简体中文](README.zh.md)
 This guide focuses on one thing: getting a runnable, testable component in this repository that can generate `meta.json`.
 
 If you want a real minimal example, start with [`astronverse-hello/`](./astronverse-hello/).
+If you need the full reference for form contracts, type metadata, gateway-backed components, and validation, read the [component development reference](./DEVELOPMENT.md).
 
 ## 1. Prepare the Environment
 
@@ -120,4 +121,5 @@ Not for the minimal path. First make the Python component, tests, and `meta.json
 ## Next
 
 - Explore the example component: [`astronverse-hello/`](./astronverse-hello/)
+- Read the full reference: [`DEVELOPMENT.md`](./DEVELOPMENT.md)
 - Go back to the engine script guide: [`../README.md`](../README.md)
