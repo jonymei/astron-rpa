@@ -1,5 +1,6 @@
 from unittest.mock import patch
 import pytest
+from astronverse.openapi.error import BaseException
 from astronverse.openapi.ocr.pdf import ocr_pdf
 
 
@@ -14,5 +15,6 @@ def test_ocr_pdf_with_url(mock_post):
 
 
 def test_ocr_pdf_raises_when_no_input():
-    with pytest.raises(Exception):
+    with pytest.raises(BaseException) as exc_info:
         ocr_pdf()
+    assert "图片路径不存在或格式错误" in str(exc_info.value)

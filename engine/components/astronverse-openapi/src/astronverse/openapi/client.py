@@ -3,7 +3,7 @@ import json
 import requests
 from astronverse.actionlib.atomic import atomicMg
 
-from astronverse.openapi.error import AI_SERVER_ERROR, BaseException
+from astronverse.openapi.error import AI_REQ_ERROR_FORMAT, AI_SERVER_ERROR, BaseException, format_error
 
 
 class GatewayClient:
@@ -21,12 +21,16 @@ class GatewayClient:
         request_headers = {"content-type": "application/json"}
         if headers:
             request_headers.update(headers)
-        response = requests.request(
-            "POST",
-            url,
-            data=json.dumps(payload),
-            headers=request_headers,
-        )
+        try:
+            response = requests.request(
+                "POST",
+                url,
+                data=json.dumps(payload),
+                headers=request_headers,
+                timeout=180,
+            )
+        except requests.RequestException as exc:
+            raise BaseException(format_error(AI_REQ_ERROR_FORMAT, exc), f"gateway request failed: {exc}") from exc
         if response.status_code != 200:
             raise BaseException(AI_SERVER_ERROR, f"ai服务器无响应或错误: {response.text}")
         return response.json()
@@ -40,7 +44,10 @@ class GatewayClient:
         url = f"{GatewayClient._gateway_base_url()}{path}"
         files = {"file": (filename, file_bytes)}
         data = extra_fields or {}
-        response = requests.post(url, files=files, data=data)
+        try:
+            response = requests.post(url, files=files, data=data, timeout=180)
+        except requests.RequestException as exc:
+            raise BaseException(format_error(AI_REQ_ERROR_FORMAT, exc), f"gateway multipart request failed: {exc}") from exc
         if response.status_code != 200:
             raise BaseException(AI_SERVER_ERROR, f"ai服务器无响应或错误: {response.text}")
         return response.json()

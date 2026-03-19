@@ -226,6 +226,9 @@ atomic:
       - key: raw
         title: 原始结果
         tip: 输出完整识别结果对象
+      - key: saved_file
+        title: 保存文件路径
+        tip: 输出保存到本地的结果文件路径
   OpenApi.ocr_pdf:
     title: PDF文档识别
     comment: 多页PDF识别，按页计费（10积分/页）
