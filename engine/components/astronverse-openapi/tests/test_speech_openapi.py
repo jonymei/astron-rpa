@@ -2,7 +2,7 @@ import base64
 from pathlib import Path
 from unittest.mock import patch
 
-from astronverse.openapi.openapi import OpenApi
+from astronverse.openapi import speech_asr_zh, speech_tts_ultra_human
 
 
 def test_speech_asr_zh_saves_text_result(tmp_path):
@@ -14,8 +14,8 @@ def test_speech_asr_zh_saves_text_result(tmp_path):
         "result": {"segments": [{"text": "你好世界"}]},
     }
 
-    with patch("astronverse.openapi.openapi.GatewayClient.post", return_value=response_payload):
-        result = OpenApi.speech_asr_zh(
+    with patch("astronverse.openapi.speech._common.GatewayClient.post", return_value=response_payload):
+        result = speech_asr_zh(
             src_file=str(source),
             is_save=True,
             dst_file=str(tmp_path),
@@ -34,8 +34,8 @@ def test_speech_tts_writes_audio_file(tmp_path):
         "result": {"format": "mp3"},
     }
 
-    with patch("astronverse.openapi.openapi.GatewayClient.post", return_value=response_payload):
-        result = OpenApi.speech_tts_ultra_human(
+    with patch("astronverse.openapi.speech._common.GatewayClient.post", return_value=response_payload):
+        result = speech_tts_ultra_human(
             text="你好",
             dst_file=str(tmp_path),
             dst_file_name="tts_demo",
