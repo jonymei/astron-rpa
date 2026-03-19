@@ -68,6 +68,12 @@ uv run python ../.agents/skills/action/scripts/meta_json_to_config_yaml.py compo
 - **复杂表单**：`engine/components/astronverse-window/`（如 `DynamicsItem`）。
 - **工作区约定**：`engine/AGENTS.md`；组件说明：`engine/components/README.md`。
 
+## **重点**代码组织方式参考案例
+
+- 精简Demo案例参考，从零开始的项目 astronverse-hello
+- 线上简单案例组织方式参考 astronverse-report
+- 线上复杂案例组织方式参考 astronverse-system
+
 ## 提交前自检
 
 - [ ] `@staticmethod` + `@atomicMg.atomic`，分组名符合产品约定
