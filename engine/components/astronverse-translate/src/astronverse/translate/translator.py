@@ -1,56 +1,23 @@
-import requests
 from astronverse.actionlib import AtomicFormType, AtomicFormTypeMeta
 from astronverse.actionlib.atomic import atomicMg
 
 from astronverse.translate import TargetLanguageTypes
-from astronverse.translate.error import TranslateAPIError
+from astronverse.translate.core import (
+    TranslateRequestError,
+    TranslateResponseEmptyError,
+    TranslateResponseShapeError,
+    TranslatorCore,
+)
+from astronverse.translate.error import (
+    BaseException,
+    TRANSLATE_REQUEST_ERROR,
+    TRANSLATE_RESPONSE_EMPTY_ERROR,
+    TRANSLATE_RESPONSE_SHAPE_ERROR,
+)
 
 
 class TranslatorAI:
     """Translate free text with a user-configured OpenAI-compatible API."""
-
-    @staticmethod
-    def _build_chat_completions_url(base_url: str) -> str:
-        normalized = base_url.rstrip("/")
-        if normalized.endswith("/chat/completions"):
-            return normalized
-        return f"{normalized}/chat/completions"
-
-    @staticmethod
-    def _build_payload(model: str, target_language: str, source_text: str) -> dict:
-        return {
-            "model": model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a translation engine. Translate the user text into "
-                        f"{target_language}. Return only the translated text without explanation."
-                    ),
-                },
-                {"role": "user", "content": source_text},
-            ],
-            "stream": False,
-        }
-
-    @staticmethod
-    def _extract_content(response_json: dict) -> str:
-        choices = response_json.get("choices")
-        if not choices and isinstance(response_json.get("data"), dict):
-            choices = response_json["data"].get("choices")
-
-        if not choices:
-            raise TranslateAPIError("Translation API returned an unsupported response shape.")
-
-        try:
-            content = choices[0]["message"]["content"]
-        except (IndexError, KeyError, TypeError) as exc:
-            raise TranslateAPIError("Translation API response is missing message content.") from exc
-
-        if not isinstance(content, str) or not content.strip():
-            raise TranslateAPIError("Translation API returned empty translated text.")
-
-        return content.strip()
 
     @staticmethod
     @atomicMg.atomic(
@@ -70,21 +37,19 @@ class TranslatorAI:
         target_language: TargetLanguageTypes = TargetLanguageTypes.ENGLISH,
         source_text: str = "",
     ) -> str:
-        url = TranslatorAI._build_chat_completions_url(base_url=base_url)
-        payload = TranslatorAI._build_payload(
-            model=model,
-            target_language=target_language.value if isinstance(target_language, TargetLanguageTypes) else str(target_language),
-            source_text=source_text,
-        )
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=60)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            raise TranslateAPIError(f"Translation API request failed: {exc}") from exc
-
-        return TranslatorAI._extract_content(response.json())
+            return TranslatorCore.translate_text(
+                base_url=base_url,
+                api_key=api_key,
+                model=model,
+                target_language=(
+                    target_language.value if isinstance(target_language, TargetLanguageTypes) else str(target_language)
+                ),
+                source_text=source_text,
+            )
+        except TranslateRequestError as exc:
+            raise BaseException(TRANSLATE_REQUEST_ERROR, f"translate api request failed: {exc}") from exc
+        except TranslateResponseShapeError as exc:
+            raise BaseException(TRANSLATE_RESPONSE_SHAPE_ERROR, f"unsupported response shape: {exc}") from exc
+        except TranslateResponseEmptyError as exc:
+            raise BaseException(TRANSLATE_RESPONSE_EMPTY_ERROR, f"empty translated text: {exc}") from exc
